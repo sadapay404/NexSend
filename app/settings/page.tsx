@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, Loader2, Star, Moon, Languages, ShieldCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useApp } from "@/components/AppStateProvider";
 import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
   const { state, refresh } = useApp();
+  const router = useRouter();
   const me = state?.me;
   const [displayName, setDisplayName] = useState("");
   const [savingName, setSavingName] = useState(false);
@@ -44,6 +46,7 @@ export default function SettingsPage() {
       setNameMsg(res.ok ? "Saved" : data.error ?? "Could not save");
       if (res.ok) {
         await refresh();
+        router.refresh();
       }
     } finally {
       setSavingName(false);

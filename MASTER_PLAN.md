@@ -4,6 +4,22 @@
 
 > Clean like LocalSend. No fluff. No AI slop. Full-quality transfers. Login-only. No signup.
 
+
+---
+
+## Status (live)
+
+| Phase | State | Notes |
+|---|---|---|
+| 1 Discovery | ✅ done | 24 decisions locked in `ANSWERS.md` |
+| 2 Architecture & foundation | ✅ done | Next.js 14 + Tailwind + Postgres (Neon / embedded PGlite), auth, storage layer |
+| 3 Shell + admin user management | ✅ done | Login, dark shell, users CRUD, change own credentials |
+| 4 Transfer engine + history | ✅ done | Text/clipboard/files/folders, 2 GB multipart, accept/decline, history, notifications |
+| 5 Polish, security, Vercel deploy | ⏳ | App is deploy-ready (`vercel.json`, manifest, icons). Needs Neon + R2 credentials to go live |
+| 6 Testing, docs, handover | ⏳ | `README.md` + `DEPLOY.md` written; admin/user guides next |
+
+Working app today: `npm install && npm run dev` → `admin` / `admin` (embedded database, no setup).
+
 ---
 
 ## Brand / Visual Identity (from logo)

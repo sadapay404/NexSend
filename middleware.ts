@@ -2,7 +2,15 @@ import { NextResponse, type NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 import { getSecretKey } from "@/lib/secret";
 
-const PUBLIC_PATHS = ["/login", "/api/auth/login", "/favicon.ico", "/logo.jpg"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/api/auth/login",
+  "/favicon.ico",
+  "/logo.jpg",
+  "/manifest.webmanifest",
+  "/icon-",
+  "/apple-touch-icon.png",
+];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -31,5 +39,7 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|logo.jpg).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|logo.jpg|manifest.webmanifest|icon-|apple-touch-icon).*)",
+  ],
 };

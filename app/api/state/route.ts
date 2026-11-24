@@ -8,6 +8,7 @@ import {
   listPeople,
   listSent,
 } from "@/lib/transfers";
+import { shouldSweep, sweepExpired } from "@/lib/cleanup";
 import type { AppState } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +19,12 @@ export async function GET() {
 
     await query(`UPDATE users SET last_seen = NOW() WHERE id = $1`, [user.userId]);
 
-    // Lazy expiry: bytes die after 1 hour, metadata stays.
+    // Bytes die after an hour; metadata stays forever.
+    if (shouldSweep()) {
+      await sweepExpired(3).catch(() => undefined);
+    }
+
+    // Lazy expiry: recipient rows flip to expired.
     await query(
       `UPDATE transfer_recipients tr
        SET status = 'expired', updated_at = NOW()

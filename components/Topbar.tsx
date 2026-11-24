@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Send, Inbox, History, Settings, Users } from "lucide-react";
+import { Send, Inbox, History, Settings, Users, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useApp } from "./AppStateProvider";
 
@@ -23,6 +23,7 @@ export default function Topbar({ user }: Props) {
   ];
   if (user.role === "admin") {
     items.push({ href: "/admin/users", label: "Users", icon: Users });
+    items.push({ href: "/admin/history", label: "Activity", icon: Activity });
   }
 
   return (

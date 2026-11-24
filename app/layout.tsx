@@ -9,8 +9,16 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: "NexSend — Digital Sheikh Nexus",
   description: "Private transfer for Digital Sheikh Nexus Training Institute",
-  icons: { icon: "/logo.jpg", apple: "/logo.jpg" },
-  openGraph: { images: ["/logo.jpg"] },
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
+  openGraph: { images: ["/icon-512.png"], title: "NexSend" },
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "NexSend" },
 };
 
 export const viewport: Viewport = {

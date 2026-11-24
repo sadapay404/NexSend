@@ -386,7 +386,11 @@ export default function SendPage() {
                         className="rounded-xl border border-nexus-border bg-black/30 p-3"
                       >
                         <div className="flex items-center gap-3">
-                          <Icon className="w-4 h-4 text-nexus-green shrink-0" />
+                          {item.type === "image" ? (
+                            <Thumb file={item.file} />
+                          ) : (
+                            <Icon className="w-4 h-4 text-nexus-green shrink-0" />
+                          )}
                           <div className="min-w-0 flex-1">
                             <p className="text-xs font-medium truncate">
                               {item.file.name}
@@ -512,5 +516,19 @@ export default function SendPage() {
         </section>
       )}
     </div>
+  );
+}
+
+function Thumb({ file }: { file: File }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    const u = URL.createObjectURL(file);
+    setUrl(u);
+    return () => URL.revokeObjectURL(u);
+  }, [file]);
+  if (!url) return <span className="w-9 h-9 rounded-lg bg-white/5 shrink-0" />;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={url} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" />
   );
 }

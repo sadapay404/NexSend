@@ -8,6 +8,7 @@ import {
   History,
   Settings,
   Users,
+  Activity,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,7 @@ export default function Sidebar({ user }: Props) {
 
   if (user.role === "admin") {
     items.push({ href: "/admin/users", label: "Users", icon: Users });
+    items.push({ href: "/admin/history", label: "Activity", icon: Activity });
   }
 
   return (
