@@ -4,6 +4,9 @@ const nextConfig = {
   poweredByHeader: false,
   experimental: {
     serverComponentsExternalPackages: ["pg", "@electric-sql/pglite"],
+    outputFileTracingIncludes: {
+      "/api/**/*": ["./node_modules/@electric-sql/pglite/**"],
+    },
   },
   async headers() {
     return [

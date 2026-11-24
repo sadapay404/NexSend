@@ -55,18 +55,13 @@ async function getPglite() {
 }
 
 async function applySchema(): Promise<void> {
-  const fs = await import("fs");
-  const path = await import("path");
-  const sql = fs.readFileSync(
-    path.join(process.cwd(), "db", "schema.sql"),
-    "utf-8"
-  );
+  const { SCHEMA_SQL } = await import("./schema");
   if (isPostgres()) {
-    await getPool().query(sql);
+    await getPool().query(SCHEMA_SQL);
     return;
   }
   const db = await getPglite();
-  await db.exec(sql);
+  await db.exec(SCHEMA_SQL);
 }
 
 async function createFirstAdmin(): Promise<void> {
