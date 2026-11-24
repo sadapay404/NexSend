@@ -57,7 +57,20 @@ async function getPglite() {
 async function applySchema(): Promise<void> {
   const { SCHEMA_SQL } = await import("./schema");
   if (isPostgres()) {
-    await getPool().query(SCHEMA_SQL);
+    // Two instances can boot at the same moment; one transaction-level advisory
+    // lock keeps the DDL from racing with itself.
+    const client = await getPool().connect();
+    try {
+      await client.query("BEGIN");
+      await client.query("SELECT pg_advisory_xact_lock(738291045)");
+      await client.query(SCHEMA_SQL);
+      await client.query("COMMIT");
+    } catch (e) {
+      await client.query("ROLLBACK").catch(() => undefined);
+      throw e;
+    } finally {
+      client.release();
+    }
     return;
   }
   const db = await getPglite();

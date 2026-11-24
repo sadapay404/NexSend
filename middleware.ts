@@ -5,6 +5,7 @@ import { getSecretKey } from "@/lib/secret";
 const PUBLIC_PATHS = [
   "/login",
   "/api/auth/login",
+  "/api/health",
   "/favicon.ico",
   "/logo.jpg",
   "/manifest.webmanifest",
