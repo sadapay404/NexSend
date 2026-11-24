@@ -51,6 +51,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     inFlight.current = true;
     try {
       const res = await fetch("/api/state", { cache: "no-store" });
+      if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
       if (!res.ok) return;
       const next = (await res.json()) as AppState;
 
