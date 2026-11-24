@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   FileText,
   Image as ImageIcon,
@@ -25,6 +25,19 @@ type Props = {
   onChanged?: () => void;
 };
 
+const autoTried = new Set<string>();
+
+/** Fire the browser download without a second tap. Browsers may still ask. */
+function triggerDownload(id: string) {
+  const a = document.createElement("a");
+  a.href = `/api/transfers/${id}/download`;
+  a.rel = "noopener";
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => a.remove(), 1000);
+}
+
 function TypeIcon({ type, className }: { type: string; className?: string }) {
   const map: Record<string, any> = {
     text: FileText,
@@ -42,11 +55,25 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
+  const [started, setStarted] = useState(false);
+  const mounted = useRef(Date.now());
 
   const isText = item.type === "text" || item.type === "clipboard";
   const live = !item.expired;
   const canDownload = !isText && live;
   const needsAction = perspective === "received" && item.myStatus === "pending" && live;
+
+  // Auto-accepted transfers start downloading on their own, once per session.
+  useEffect(() => {
+    if (perspective !== "received" || isText || !live) return;
+    if (item.myStatus !== "accepted") return;
+    if (autoTried.has(item.id)) return;
+    const fresh = Date.now() - new Date(item.createdAt).getTime() < 5 * 60 * 1000;
+    if (!fresh) return;
+    autoTried.add(item.id);
+    setStarted(true);
+    triggerDownload(item.id);
+  }, [item.id, item.myStatus, item.createdAt, isText, live, perspective]);
 
   async function act(status: "accepted" | "declined") {
     setBusy(true);
@@ -60,6 +87,9 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setError(data.error ?? "Could not update");
+      } else if (status === "accepted" && !isText) {
+        setStarted(true);
+        triggerDownload(item.id);
       }
       onChanged?.();
     } finally {
@@ -213,11 +243,18 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
             {canDownload && (
               <a
                 href={`/api/transfers/${item.id}/download`}
-                onClick={() => setTimeout(() => onChanged?.(), 800)}
+                onClick={() => {
+                  setStarted(true);
+                  setTimeout(() => onChanged?.(), 800);
+                }}
                 className="inline-flex items-center gap-1.5 bg-white/10 text-xs px-3 py-1.5 rounded-lg hover:bg-white/15"
               >
-                <Download className="w-3.5 h-3.5" />
-                {item.fileSize ? formatBytes(item.fileSize) : "Download"}
+                {started ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Download className="w-3.5 h-3.5" />
+                )}
+                {started ? "Downloading" : item.fileSize ? formatBytes(item.fileSize) : "Download"}
               </a>
             )}
 
