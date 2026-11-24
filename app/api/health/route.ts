@@ -10,6 +10,12 @@ export async function GET() {
     engine: dbEngine(),
     database: "unknown",
     storage: isR2Configured() ? "r2" : "local-disk",
+    missingStorageVars: [
+      "R2_ACCOUNT_ID",
+      "R2_ACCESS_KEY_ID",
+      "R2_SECRET_ACCESS_KEY",
+      "R2_BUCKET",
+    ].filter((v) => !process.env[v]),
   };
 
   try {

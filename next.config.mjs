@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Keeps local `next build` runs from clobbering the `next dev` output that
+  // serves the live preview.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   poweredByHeader: false,
   experimental: {
     serverComponentsExternalPackages: ["pg", "@electric-sql/pglite"],
