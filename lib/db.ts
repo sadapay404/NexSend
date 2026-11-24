@@ -37,7 +37,11 @@ async function getPglite() {
       const { PGlite } = await import("@electric-sql/pglite");
       const { mkdir } = await import("fs/promises");
       const path = await import("path");
-      const dir = process.env.PGLITE_DIR || path.join(process.cwd(), ".local", "pglite");
+      const dir =
+        process.env.PGLITE_DIR ||
+        (process.env.VERCEL
+          ? "/tmp/nexsend/pglite"
+          : path.join(process.cwd(), ".local", "pglite"));
       await mkdir(dir, { recursive: true });
       const db = new PGlite(dir);
       await db.waitReady;
@@ -82,6 +86,45 @@ async function createFirstAdmin(): Promise<void> {
      VALUES ($1, $2, $3, 'admin') ON CONFLICT (username) DO NOTHING`,
     [username, hash, displayName]
   );
+
+  // Preview deployments run on an ephemeral database; keep a demo team so the
+  // UI always has faces to show. Never enabled unless DEMO_SEED=1.
+  if (process.env.DEMO_SEED === "1") {
+    const demoHash = await hashPassword("pass123");
+    const demo = [
+      ["sara", "Sara Khan"],
+      ["bilal", "Bilal Ahmed"],
+      ["ayesha", "Ayesha Noor"],
+    ];
+    for (const [u, name] of demo) {
+      await rawQuery(
+        `INSERT INTO users (username, password_hash, display_name, role)
+         VALUES ($1, $2, $3, 'user') ON CONFLICT (username) DO NOTHING`,
+        [u, demoHash, name]
+      );
+    }
+    const sender = await rawQuery<{ id: string }>(
+      `SELECT id FROM users WHERE username = $1`,
+      [username]
+    );
+    const first = await rawQuery<{ id: string }>(
+      `SELECT id FROM users WHERE username = 'sara'`
+    );
+    if (sender[0] && first[0]) {
+      const t = await rawQuery<{ id: string }>(
+        `INSERT INTO transfers (sender_id, type, text_content, status)
+         VALUES ($1, 'text', $2, 'ready') RETURNING id`,
+        [sender[0].id, "Welcome to NexSend. This is a demo message."]
+      );
+      if (t[0]) {
+        await rawQuery(
+          `INSERT INTO transfer_recipients (transfer_id, recipient_id, status)
+           VALUES ($1, $2, 'pending') ON CONFLICT DO NOTHING`,
+          [t[0].id, first[0].id]
+        );
+      }
+    }
+  }
 }
 
 async function ensureReady(): Promise<void> {

@@ -41,7 +41,10 @@ function r2(): S3Client {
 const bucket = () => process.env.R2_BUCKET ?? "nexsend-files";
 
 function localRoot(): string {
-  return process.env.LOCAL_STORAGE_DIR || join(process.cwd(), ".local", "uploads");
+  if (process.env.LOCAL_STORAGE_DIR) return process.env.LOCAL_STORAGE_DIR;
+  // Serverless filesystems are read-only except /tmp.
+  if (process.env.VERCEL) return "/tmp/nexsend/uploads";
+  return join(process.cwd(), ".local", "uploads");
 }
 
 function localPath(key: string): string {
