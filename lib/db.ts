@@ -85,7 +85,7 @@ async function createFirstAdmin(): Promise<void> {
   // Preview deployments run on an ephemeral database; keep a demo team so the
   // UI always has faces to show. Never enabled unless DEMO_SEED=1.
   if (process.env.DEMO_SEED === "1") {
-    const demoHash = await hashPassword("pass123");
+    const demoHash = await hashPassword("pass123", 8);
     const demo = [
       ["sara", "Sara Khan"],
       ["bilal", "Bilal Ahmed"],

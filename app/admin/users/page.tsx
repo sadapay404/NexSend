@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn, formatTime } from "@/lib/utils";
 import AdminTabs from "@/components/AdminTabs";
+import Avatar from "@/components/Avatar";
 
 type AdminUser = {
   id: string;
@@ -19,6 +20,7 @@ type AdminUser = {
   display_name: string;
   role: "admin" | "user";
   created_at: string;
+  avatar_updated_at: string | null;
   last_seen: string | null;
   sent_count: string;
   received_count: string;
@@ -138,16 +140,13 @@ export default function AdminUsersPage() {
           {users.map((u) => (
             <div key={u.id} className="p-3.5 flex items-center gap-3 hover:bg-white/[0.03] transition-colors">
               <span className="relative shrink-0">
-                <span
-                  className={cn(
-                    "w-9 h-9 rounded-full grid place-items-center text-xs font-bold",
-                    u.role === "admin"
-                      ? "bg-nexus-green text-black"
-                      : "bg-white/10 text-white"
-                  )}
-                >
-                  {u.display_name.slice(0, 2).toUpperCase()}
-                </span>
+                <Avatar
+                  name={u.display_name}
+                  userId={u.id}
+                  updatedAt={u.avatar_updated_at}
+                  size={36}
+                  className={u.role === "admin" ? "ring-2 ring-nexus-green/60" : ""}
+                />
                 <span
                   className={cn(
                     "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-nexus-card",

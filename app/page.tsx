@@ -47,7 +47,7 @@ function iconFor(type: TransferType) {
 }
 
 export default function SendPage() {
-  const { state, refresh } = useApp();
+  const { state, refresh, patchPerson } = useApp();
   const [mode, setMode] = useState<"text" | "files">("text");
   const [text, setText] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
@@ -138,12 +138,12 @@ export default function SendPage() {
   }
 
   function toggleFavorite(id: string, favorite: boolean) {
-    // optimistic
+    patchPerson(id, { favorite }); // flips instantly
     fetch("/api/favorites", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId: id, favorite }),
-    }).then(refresh);
+    }).then(() => refresh());
   }
 
   async function sendText() {
@@ -246,12 +246,23 @@ export default function SendPage() {
             </button>
           )}
         </div>
-        <PersonPicker
-          people={people}
-          selected={selected}
-          onChange={setSelected}
-          onToggleFavorite={toggleFavorite}
-        />
+        {state ? (
+          <PersonPicker
+            people={people}
+            selected={selected}
+            onChange={setSelected}
+            onToggleFavorite={toggleFavorite}
+          />
+        ) : (
+          <div className="flex gap-4">
+            {[0, 1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="w-14 h-14 rounded-full bg-white/5 animate-pulse shrink-0"
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="rounded-2xl border border-nexus-border bg-nexus-card overflow-hidden">

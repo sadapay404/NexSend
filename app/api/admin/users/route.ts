@@ -22,6 +22,7 @@ export async function GET() {
     await requireAdmin();
     const users = await query(
       `SELECT u.id, u.username, u.display_name, u.role, u.created_at, u.last_seen,
+              u.avatar_updated_at,
               (SELECT COUNT(*) FROM transfers t WHERE t.sender_id = u.id) AS sent_count,
               (SELECT COUNT(*) FROM transfer_recipients r WHERE r.recipient_id = u.id) AS received_count
        FROM users u

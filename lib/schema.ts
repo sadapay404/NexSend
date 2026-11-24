@@ -64,4 +64,9 @@ CREATE INDEX IF NOT EXISTS idx_recipients_recipient ON transfer_recipients(recip
 CREATE INDEX IF NOT EXISTS idx_recipients_transfer ON transfer_recipients(transfer_id);
 CREATE INDEX IF NOT EXISTS idx_transfers_expires ON transfers(expires_at);
 CREATE INDEX IF NOT EXISTS idx_users_last_seen ON users(last_seen);
+
+-- Profile pictures (stored with the account, nobody else can change them)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar BYTEA;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_mime TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_updated_at TIMESTAMPTZ;
 `;

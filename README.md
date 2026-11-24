@@ -12,7 +12,8 @@ Think LocalSend, but over the internet: both sides see progress live, and nothin
 - **Live progress** on both sides, with in-app notifications.
 - **Accept or decline.** Auto-accept can be turned on for favorites or for everyone in Settings.
 - **History** keeps every transfer. Files can be re-downloaded for 1 hour, then the bytes are deleted and the row stays as `Expired`.
-- **Admin** manages usernames, display names and passwords; users can only change their own display name.
+- **Profile pictures** users upload and manage themselves — the admin cannot change them.
+- **Admin** manages usernames, display names and passwords; users can only change their own display name and photo.
 - Dark only. Black + `#00A651` + white, logo from `public/logo.jpg`.
 - Mobile first layout, English only.
 

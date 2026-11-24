@@ -28,6 +28,9 @@ function mapTransfer(
     expired: new Date(row.expires_at).getTime() < Date.now(),
     senderId: row.sender_id,
     senderName: row.sender_name ?? "",
+    senderAvatarUpdatedAt: row.sender_avatar
+      ? new Date(row.sender_avatar).toISOString()
+      : null,
     myStatus: (row.my_status as RecipientStatus) ?? null,
     recipients,
   };
@@ -63,7 +66,8 @@ export async function listIncoming(
   limit = 60
 ): Promise<TransferItem[]> {
   const rows = await query(
-    `SELECT t.*, u.display_name AS sender_name, tr.status AS my_status
+    `SELECT t.*, u.display_name AS sender_name,
+            u.avatar_updated_at AS sender_avatar, tr.status AS my_status
      FROM transfer_recipients tr
      JOIN transfers t ON t.id = tr.transfer_id
      JOIN users u ON u.id = t.sender_id
@@ -81,7 +85,7 @@ export async function listSent(
   limit = 60
 ): Promise<TransferItem[]> {
   const rows = await query(
-    `SELECT t.*, u.display_name AS sender_name
+    `SELECT t.*, u.display_name AS sender_name, u.avatar_updated_at AS sender_avatar
      FROM transfers t
      JOIN users u ON u.id = t.sender_id
      WHERE t.sender_id = $1 AND t.deleted_by_sender = FALSE
@@ -102,8 +106,9 @@ export async function listPeople(
     display_name: string;
     role: string;
     last_seen: string | null;
+    avatar_updated_at: string | null;
   }>(
-    `SELECT id, display_name, role, last_seen
+    `SELECT id, display_name, role, last_seen, avatar_updated_at
      FROM users
      WHERE id <> $1
      ORDER BY display_name ASC`,
@@ -114,6 +119,9 @@ export async function listPeople(
     id: r.id,
     displayName: r.display_name,
     isAdmin: r.role === "admin",
+    avatarUpdatedAt: r.avatar_updated_at
+      ? new Date(r.avatar_updated_at).toISOString()
+      : null,
     favorite: favoriteIds.includes(r.id),
     online:
       r.last_seen !== null &&

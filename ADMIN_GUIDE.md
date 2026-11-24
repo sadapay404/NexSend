@@ -49,9 +49,10 @@ file name and size, whether the download window is still open, and whether the
 sender removed it from their own history. It never shows file contents after the
 hour is over — the bytes are gone at that point.
 
-## Display names
+## Display names and photos
 
-Users can change only their display name. Username and password are yours.
+Users change their own display name and profile picture. Username and password are
+yours. Photos are self-managed by design — you cannot set or clear someone else's.
 
 ## Storage and retention
 

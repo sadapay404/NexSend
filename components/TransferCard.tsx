@@ -18,6 +18,7 @@ import {
 import type { TransferItem } from "@/lib/types";
 import { formatBytes, formatTime, cn } from "@/lib/utils";
 import Countdown from "./Countdown";
+import Avatar from "./Avatar";
 
 type Props = {
   item: TransferItem;
@@ -56,41 +57,53 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
   const [started, setStarted] = useState(false);
+  const [status, setStatus] = useState(item.myStatus);
+
+  useEffect(() => {
+    setStatus(item.myStatus);
+  }, [item.myStatus]);
 
   const isText = item.type === "text" || item.type === "clipboard";
   const live = !item.expired;
   const canDownload = !isText && live;
-  const needsAction = perspective === "received" && item.myStatus === "pending" && live;
+  const needsAction = perspective === "received" && status === "pending" && live;
 
   // Auto-accepted transfers start downloading on their own, once per session.
   useEffect(() => {
     if (perspective !== "received" || isText || !live) return;
-    if (item.myStatus !== "accepted") return;
+    if (status !== "accepted") return;
     if (autoTried.has(item.id)) return;
     const fresh = Date.now() - new Date(item.createdAt).getTime() < 5 * 60 * 1000;
     if (!fresh) return;
     autoTried.add(item.id);
     setStarted(true);
     triggerDownload(item.id);
-  }, [item.id, item.myStatus, item.createdAt, isText, live, perspective]);
+  }, [item.id, status, item.createdAt, isText, live, perspective]);
 
-  async function act(status: "accepted" | "declined") {
+  async function act(next: "accepted" | "declined") {
+    const previous = status;
+    setStatus(next); // optimistic: the card flips immediately
     setBusy(true);
     setError("");
+    if (next === "accepted" && !isText) {
+      setStarted(true);
+      triggerDownload(item.id);
+    }
     try {
       const res = await fetch(`/api/transfers/${item.id}/status`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status: next }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
+        setStatus(previous);
         setError(data.error ?? "Could not update");
-      } else if (status === "accepted" && !isText) {
-        setStarted(true);
-        triggerDownload(item.id);
       }
       onChanged?.();
+    } catch {
+      setStatus(previous);
+      setError("Network error");
     } finally {
       setBusy(false);
     }
@@ -119,7 +132,7 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
   const statusLabel = (() => {
     if (item.expired) return "Expired";
     if (perspective === "received") {
-      switch (item.myStatus) {
+      switch (status) {
         case "pending":
           return "Waiting";
         case "accepted":
@@ -148,8 +161,25 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
       )}
     >
       <div className="flex gap-3">
-        <div className="w-11 h-11 rounded-xl bg-white/5 grid place-items-center shrink-0">
-          <TypeIcon type={item.type} className="w-5 h-5 text-nexus-green" />
+        <div className="relative shrink-0">
+          {perspective === "received" ? (
+            <Avatar
+              name={item.senderName}
+              userId={item.senderId}
+              updatedAt={item.senderAvatarUpdatedAt}
+              size={44}
+              className="rounded-xl"
+            />
+          ) : (
+            <div className="w-11 h-11 rounded-xl bg-white/5 grid place-items-center">
+              <TypeIcon type={item.type} className="w-5 h-5 text-nexus-green" />
+            </div>
+          )}
+          {perspective === "received" && (
+            <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-nexus-card border border-nexus-border grid place-items-center">
+              <TypeIcon type={item.type} className="w-3 h-3 text-nexus-green" />
+            </span>
+          )}
         </div>
 
         <div className="min-w-0 flex-1">

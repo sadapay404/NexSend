@@ -4,6 +4,7 @@ import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Person } from "@/lib/types";
 import { useState } from "react";
+import Avatar from "./Avatar";
 
 type Props = {
   people: Person[];
@@ -11,15 +12,6 @@ type Props = {
   onChange: (ids: string[]) => void;
   onToggleFavorite: (id: string, favorite: boolean) => void;
 };
-
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase())
-    .join("");
-}
 
 export default function PersonPicker({
   people,
@@ -62,14 +54,20 @@ export default function PersonPicker({
                     onClick={() => toggle(person.id)}
                     aria-pressed={active}
                     className={cn(
-                      "relative w-14 h-14 rounded-full grid place-items-center text-sm font-bold",
+                      "relative w-14 h-14 rounded-full overflow-hidden grid place-items-center text-sm font-bold",
                       "transition-all duration-200 press",
                       active
-                        ? "bg-nexus-green text-black ring-2 ring-nexus-green ring-offset-2 ring-offset-black scale-105"
-                        : "bg-white/10 text-white/90"
+                        ? "ring-2 ring-nexus-green ring-offset-2 ring-offset-black scale-105"
+                        : ""
                     )}
                   >
-                    {initials(person.displayName)}
+                    <Avatar
+                      name={person.displayName}
+                      userId={person.id}
+                      updatedAt={person.avatarUpdatedAt}
+                      size={56}
+                      textClassName="text-white/90"
+                    />
                     <span
                       className={cn(
                         "absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-black",
@@ -137,14 +135,16 @@ export default function PersonPicker({
                   className="flex items-center gap-3 flex-1 min-w-0 text-left"
                 >
                   <span className="relative shrink-0">
-                    <span
+                    <Avatar
+                      name={person.displayName}
+                      userId={person.id}
+                      updatedAt={person.avatarUpdatedAt}
+                      size={36}
                       className={cn(
-                        "w-9 h-9 rounded-full grid place-items-center text-xs font-bold transition-colors",
-                        active ? "bg-nexus-green text-black" : "bg-white/10 text-white"
+                        "transition-all duration-200",
+                        active && "ring-2 ring-nexus-green"
                       )}
-                    >
-                      {initials(person.displayName)}
-                    </span>
+                    />
                     <span
                       className={cn(
                         "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-nexus-card",

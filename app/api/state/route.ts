@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { query } from "@/lib/db";
+import { query, queryOne } from "@/lib/db";
 import { handleError, requireUser } from "@/lib/api";
 import {
   autoAcceptMode,
@@ -17,28 +17,26 @@ export async function GET() {
   try {
     const user = await requireUser();
 
-    await query(`UPDATE users SET last_seen = NOW() WHERE id = $1`, [user.userId]);
+    // Presence only needs a heartbeat every 30 seconds, not on every poll.
+    await query(
+      `UPDATE users SET last_seen = NOW()
+       WHERE id = $1 AND (last_seen IS NULL OR last_seen < NOW() - INTERVAL '30 seconds')`,
+      [user.userId]
+    );
 
-    // Bytes die after an hour; metadata stays forever.
     if (shouldSweep()) {
       await sweepExpired(3).catch(() => undefined);
     }
 
-    // Lazy expiry: recipient rows flip to expired.
-    await query(
-      `UPDATE transfer_recipients tr
-       SET status = 'expired', updated_at = NOW()
-       FROM transfers t
-       WHERE tr.transfer_id = t.id
-         AND tr.status IN ('pending','accepted')
-         AND t.expires_at < NOW()`
-    );
-
-    const [favIds, incoming, sent, mode] = await Promise.all([
+    const [favIds, incoming, sent, mode, avatarRow] = await Promise.all([
       favoriteIdsOf(user.userId),
-      listIncoming(user.userId),
-      listSent(user.userId),
+      listIncoming(user.userId, 25),
+      listSent(user.userId, 25),
       autoAcceptMode(user.userId),
+      queryOne<{ avatar_updated_at: string | null }>(
+        `SELECT avatar_updated_at FROM users WHERE id = $1`,
+        [user.userId]
+      ),
     ]);
 
     const people = await listPeople(user.userId, favIds);
@@ -50,6 +48,9 @@ export async function GET() {
         displayName: user.displayName,
         role: user.role,
         autoAccept: mode,
+        avatarUpdatedAt: avatarRow?.avatar_updated_at
+          ? new Date(avatarRow.avatar_updated_at).toISOString()
+          : null,
       },
       people,
       incoming,
@@ -58,7 +59,9 @@ export async function GET() {
         .length,
     };
 
-    return NextResponse.json(state);
+    return NextResponse.json(state, {
+      headers: { "Cache-Control": "no-store" },
+    });
   } catch (e) {
     return handleError(e);
   }

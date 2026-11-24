@@ -31,7 +31,6 @@ export default function LoginPage() {
       }
       const next = params.get("next");
       router.replace(next && next !== "/login" ? next : "/");
-      router.refresh();
     } catch {
       setError("Network error. Try again.");
       setLoading(false);

@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { ArrowDownLeft, ArrowUpRight, X } from "lucide-react";
-import type { AppState } from "@/lib/types";
+import type { AppState, Me, Person } from "@/lib/types";
 
 type Toast = { id: string; text: string; kind: "in" | "out" };
 
@@ -18,6 +18,8 @@ type Ctx = {
   loading: boolean;
   refresh: () => Promise<void>;
   reload: () => Promise<void>;
+  patchPerson: (id: string, patch: Partial<Person>) => void;
+  patchMe: (patch: Partial<Me>) => void;
 };
 
 const AppContext = createContext<Ctx>({
@@ -25,9 +27,11 @@ const AppContext = createContext<Ctx>({
   loading: true,
   refresh: async () => {},
   reload: async () => {},
+  patchPerson: () => {},
+  patchMe: () => {},
 });
 
-const POLL_MS = 3000;
+const POLL_MS = 4000;
 
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AppState | null>(null);
@@ -44,6 +48,22 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 4500);
+  }, []);
+
+  // Optimistic updates: the UI answers instantly, the poll settles the truth.
+  const patchPerson = useCallback((id: string, patch: Partial<Person>) => {
+    setState((prev) =>
+      prev
+        ? {
+            ...prev,
+            people: prev.people.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+          }
+        : prev
+    );
+  }, []);
+
+  const patchMe = useCallback((patch: Partial<Me>) => {
+    setState((prev) => (prev ? { ...prev, me: { ...prev.me, ...patch } } : prev));
   }, []);
 
   const load = useCallback(async () => {
@@ -119,7 +139,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   }, [load]);
 
   return (
-    <AppContext.Provider value={{ state, loading, refresh: load, reload: load }}>
+    <AppContext.Provider
+      value={{ state, loading, refresh: load, reload: load, patchPerson, patchMe }}
+    >
       {children}
       <div className="fixed z-50 bottom-4 right-4 left-4 sm:left-auto flex flex-col gap-2 pointer-events-none">
         {toasts.map((t) => (

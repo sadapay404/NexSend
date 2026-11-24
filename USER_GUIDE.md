@@ -52,7 +52,10 @@ Text arrives instantly, no download needed: read it and press **Copy**.
 
 ## Settings
 
-- **Display name** — the only thing you can change. This is what others see.
+- **Profile picture** — tap **Add photo**, pick any image; it is cropped to a square
+  and stored with your account. Nobody else can change it, including the administrator.
+  **Remove** puts your initials back.
+- **Display name** — this is what others see.
 - **Username and password** — set by the administrator. Ask them to change it.
 - **Receiving** — ask me every time (default), auto-accept favorites, or auto-accept everyone.
 - **Favorites** — the same stars as on the Send screen.

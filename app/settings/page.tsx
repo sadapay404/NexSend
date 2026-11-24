@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Loader2, Star, Moon, Languages, ShieldCheck } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Check, Loader2, Star, Moon, Languages, Camera } from "lucide-react";
 import { useApp } from "@/components/AppStateProvider";
+import Avatar from "@/components/Avatar";
+import { fileToAvatarDataUrl } from "@/lib/image";
 import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
-  const { state, refresh } = useApp();
-  const router = useRouter();
+  const { state, refresh, patchMe, patchPerson } = useApp();
+  const avatarInput = useRef<HTMLInputElement>(null);
+  const [avatarBusy, setAvatarBusy] = useState(false);
   const me = state?.me;
   const [displayName, setDisplayName] = useState("");
   const [savingName, setSavingName] = useState(false);
@@ -45,8 +47,8 @@ export default function SettingsPage() {
       const data = await res.json();
       setNameMsg(res.ok ? "Saved" : data.error ?? "Could not save");
       if (res.ok) {
+        patchMe({ displayName });
         await refresh();
-        router.refresh();
       }
     } finally {
       setSavingName(false);
@@ -80,6 +82,83 @@ export default function SettingsPage() {
           Profile
         </h2>
         <form onSubmit={saveName} className="p-4 space-y-4">
+          <div className="flex items-center gap-4">
+            <Avatar
+              name={me.displayName}
+              userId={me.id}
+              updatedAt={me.avatarUpdatedAt}
+              size={64}
+              className="ring-2 ring-white/10"
+              textClassName="text-lg"
+            />
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => avatarInput.current?.click()}
+                  disabled={avatarBusy}
+                  className="text-xs bg-white/10 hover:bg-white/15 active:scale-95 transition-all px-3 py-2 rounded-lg inline-flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {avatarBusy ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Camera className="w-3.5 h-3.5" />
+                  )}
+                  {me.avatarUpdatedAt ? "Change photo" : "Add photo"}
+                </button>
+                {me.avatarUpdatedAt && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setAvatarBusy(true);
+                      await fetch("/api/me/avatar", { method: "DELETE" });
+                      patchMe({ avatarUpdatedAt: null });
+                      setAvatarBusy(false);
+                      refresh();
+                    }}
+                    className="text-xs text-white/40 hover:text-red-400 transition-colors px-2 py-2"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+              <p className="text-[11px] text-white/30 mt-1.5">
+                Only you can change this.
+              </p>
+            </div>
+            <input
+              ref={avatarInput}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (!file) return;
+                setAvatarBusy(true);
+                try {
+                  const dataUrl = await fileToAvatarDataUrl(file);
+                  const res = await fetch("/api/me/avatar", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ image: dataUrl }),
+                  });
+                  const data = await res.json().catch(() => ({}));
+                  if (res.ok) {
+                    patchMe({ avatarUpdatedAt: data.avatarUpdatedAt });
+                    refresh();
+                  } else {
+                    setNameMsg(data.error ?? "Could not save photo");
+                  }
+                } catch (err) {
+                  setNameMsg((err as Error).message);
+                } finally {
+                  setAvatarBusy(false);
+                }
+              }}
+            />
+          </div>
+
           <div>
             <label className="block text-xs text-white/50 mb-1.5">Display name</label>
             <input
@@ -183,26 +262,25 @@ export default function SettingsPage() {
           {(state?.people ?? []).map((person) => (
             <div
               key={person.id}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/5"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/5 transition-colors"
             >
-              <span
-                className={cn(
-                  "w-2 h-2 rounded-full shrink-0",
-                  person.online ? "bg-nexus-green" : "bg-white/20"
-                )}
+              <Avatar
+                name={person.displayName}
+                userId={person.id}
+                updatedAt={person.avatarUpdatedAt}
+                size={28}
               />
               <span className="text-sm flex-1 truncate">{person.displayName}</span>
               <button
-                onClick={() =>
+                onClick={() => {
+                  const next = !person.favorite;
+                  patchPerson(person.id, { favorite: next });
                   fetch("/api/favorites", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      userId: person.id,
-                      favorite: !person.favorite,
-                    }),
-                  }).then(refresh)
-                }
+                    body: JSON.stringify({ userId: person.id, favorite: next }),
+                  }).then(() => refresh());
+                }}
                 aria-label={person.favorite ? "Unstar" : "Star"}
                 className="p-1.5 rounded-lg hover:bg-white/10"
               >

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Avatar from "./Avatar";
+import { useApp } from "./AppStateProvider";
 
 type Props = {
   user: { displayName: string; username: string; role: string };
@@ -18,13 +20,8 @@ const TITLES: Record<string, string> = {
 
 export default function Topbar({ user }: Props) {
   const pathname = usePathname();
+  const { state } = useApp();
   const title = TITLES[pathname] ?? "NexSend";
-  const initials = user.displayName
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase())
-    .join("");
 
   return (
     <header className="md:hidden sticky top-0 z-30 bg-black/85 backdrop-blur-xl border-b border-nexus-border">
@@ -46,12 +43,14 @@ export default function Topbar({ user }: Props) {
 
         <span className="ml-auto text-xs font-medium text-white/50">{title}</span>
 
-        <Link
-          href="/settings"
-          aria-label="Settings"
-          className="ml-1 w-9 h-9 rounded-full bg-white/10 grid place-items-center text-[11px] font-bold press"
-        >
-          {initials || "?"}
+        <Link href="/settings" aria-label="Settings" className="ml-1 press">
+          <Avatar
+            name={state?.me.displayName ?? user.displayName}
+            userId={state?.me.id}
+            updatedAt={state?.me.avatarUpdatedAt ?? null}
+            size={36}
+            className="ring-1 ring-white/15"
+          />
         </Link>
       </div>
     </header>

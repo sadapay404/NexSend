@@ -21,6 +21,7 @@ export type Person = {
   online: boolean;
   favorite: boolean;
   isAdmin: boolean;
+  avatarUpdatedAt: string | null;
 };
 
 export type TransferItem = {
@@ -37,6 +38,7 @@ export type TransferItem = {
   expired: boolean;
   senderId: string;
   senderName: string;
+  senderAvatarUpdatedAt: string | null;
   myStatus: RecipientStatus | null;
   recipients: { id: string; displayName: string; status: RecipientStatus }[];
 };
@@ -47,6 +49,7 @@ export type Me = {
   displayName: string;
   role: Role;
   autoAccept: "none" | "favs" | "all";
+  avatarUpdatedAt: string | null;
 };
 
 export type AppState = {

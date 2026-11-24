@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Send, Inbox, History, Settings, Users, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useApp } from "./AppStateProvider";
+import Avatar from "./Avatar";
 
 type Props = {
   user: { displayName: string; username: string; role: string };
@@ -82,9 +83,19 @@ export default function Sidebar({ user }: Props) {
       </nav>
 
       <div className="p-3 border-t border-nexus-border">
-        <div className="px-3 py-2">
-          <p className="text-sm font-medium truncate">{user.displayName}</p>
-          <p className="text-xs text-white/40 truncate">@{user.username}</p>
+        <div className="px-3 py-2 flex items-center gap-2.5">
+          <Avatar
+            name={state?.me.displayName ?? user.displayName}
+            userId={state?.me.id}
+            updatedAt={state?.me.avatarUpdatedAt ?? null}
+            size={32}
+          />
+          <div className="min-w-0">
+            <p className="text-sm font-medium truncate">
+              {state?.me.displayName ?? user.displayName}
+            </p>
+            <p className="text-xs text-white/40 truncate">@{user.username}</p>
+          </div>
         </div>
         <form action="/api/auth/logout" method="POST">
           <button
