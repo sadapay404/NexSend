@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
-  const router = useRouter();
   const params = useSearchParams();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -30,7 +29,11 @@ export default function LoginPage() {
         return;
       }
       const next = params.get("next");
-      router.replace(next && next !== "/login" ? next : "/");
+      const target = next && next !== "/login" ? next : "/";
+      // Full navigation on purpose: it guarantees the cookie is sent with the
+      // very first request for the app shell, so the state provider starts
+      // from a signed-in page instead of a half-loaded one.
+      window.location.replace(target);
     } catch {
       setError("Network error. Try again.");
       setLoading(false);

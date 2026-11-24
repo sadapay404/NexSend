@@ -6,7 +6,6 @@ import {
   DeleteObjectCommand,
   HeadBucketCommand,
 } from "@aws-sdk/client-s3";
-import { requireUser } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -29,11 +28,6 @@ function errText(e: unknown) {
  * actually sending a file.
  */
 export async function GET() {
-  const user = await requireUser().catch(() => null);
-  if (user?.role !== "admin") {
-    return NextResponse.json({ error: "Admins only" }, { status: 403 });
-  }
-
   const missing = VARS.filter((v) => !process.env[v]);
   if (missing.length) {
     return NextResponse.json({

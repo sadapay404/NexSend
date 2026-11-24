@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { ArrowDownLeft, ArrowUpRight, X } from "lucide-react";
+import { usePathname } from "next/navigation";
 import type { AppState, Me, Person } from "@/lib/types";
 
 type Toast = { id: string; text: string; kind: "in" | "out" };
@@ -37,6 +38,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AppState | null>(null);
   const [loading, setLoading] = useState(true);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const pathname = usePathname();
+  const onLoginPage = pathname === "/login" || pathname?.startsWith("/login?");
   const inFlight = useRef(false);
   const seenIncoming = useRef<Set<string>>(new Set());
   const deliveredSeen = useRef<Set<string>>(new Set());
@@ -72,7 +75,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await fetch("/api/state", { cache: "no-store" });
       if (res.status === 401) {
-        window.location.href = "/login";
+        if (!window.location.pathname.startsWith("/login")) {
+          window.location.href = `/login?next=${encodeURIComponent(
+            window.location.pathname + window.location.search
+          )}`;
+        }
         return;
       }
       if (!res.ok) return;
@@ -121,6 +128,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   }, [push]);
 
   useEffect(() => {
+    // Nothing to poll before sign-in. Leaving the login page re-runs this
+    // effect, so the first fetch always happens with a valid session.
+    if (onLoginPage) {
+      setLoading(false);
+      return;
+    }
     load();
     const tick = () => {
       if (document.visibilityState === "visible") load();
@@ -136,7 +149,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
     };
-  }, [load]);
+  }, [load, onLoginPage]);
 
   return (
     <AppContext.Provider
