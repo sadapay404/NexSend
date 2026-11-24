@@ -13,10 +13,24 @@ const globalForDb = globalThis as unknown as {
   pglite?: Promise<any>;
   ready?: Promise<void>;
   initializing?: boolean;
+  forceLocal?: boolean;
+  pgError?: string;
 };
 
+/** Which engine is actually answering right now. */
+export function dbEngine(): "postgres" | "embedded" | "embedded-fallback" {
+  if (process.env.DATABASE_URL && !globalForDb.forceLocal) {
+    return globalForDb.pgError ? "embedded-fallback" : "postgres";
+  }
+  return globalForDb.pgError ? "embedded-fallback" : "embedded";
+}
+
+export function dbError(): string | null {
+  return globalForDb.pgError ?? null;
+}
+
 function isPostgres(): boolean {
-  return Boolean(process.env.DATABASE_URL);
+  return Boolean(process.env.DATABASE_URL) && !globalForDb.forceLocal;
 }
 
 export function getPool(): Pool {
@@ -140,8 +154,22 @@ async function ensureReady(): Promise<void> {
   if (!globalForDb.ready) {
     globalForDb.initializing = true;
     globalForDb.ready = (async () => {
-      await applySchema();
-      await createFirstAdmin();
+      try {
+        await applySchema();
+        await createFirstAdmin();
+      } catch (e) {
+        // A broken DATABASE_URL must never take the whole app down: fall back
+        // to the embedded engine so the UI still works, and report it in
+        // /api/health.
+        if (!process.env.DATABASE_URL || globalForDb.forceLocal) throw e;
+        console.error("[db] Postgres unavailable, using embedded storage:", e);
+        globalForDb.pgError = (e as Error).message;
+        globalForDb.forceLocal = true;
+        globalForDb.pgPool?.end().catch(() => undefined);
+        globalForDb.pgPool = undefined;
+        await applySchema();
+        await createFirstAdmin();
+      }
       globalForDb.initializing = false;
     })().catch((e) => {
       globalForDb.initializing = false;
