@@ -6,6 +6,7 @@ import {
   DeleteObjectCommand,
   HeadBucketCommand,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -84,8 +85,48 @@ export async function GET() {
     }
   }
 
+  // Simulate exactly what the browser does: presigned PUT straight to R2 with
+  // an Origin header. Catches a missing CORS rule before a real upload fails.
+  if (steps.write === "ok") {
+    const origin = "https://nexsend-sand.vercel.app";
+    const Key2 = `_selftest/cors-${Date.now()}.txt`;
+    try {
+      const url = await getSignedUrl(
+        client,
+        new PutObjectCommand({ Bucket, Key: Key2, ContentType: "text/plain" }),
+        { expiresIn: 300 }
+      );
+      const pre = await fetch(url, {
+        method: "OPTIONS",
+        headers: { Origin: origin, "Access-Control-Request-Method": "PUT" },
+      });
+      const allow = pre.headers.get("access-control-allow-origin");
+      steps.preflight = allow ? `ok (${allow})` : `no CORS header for ${origin}`;
+
+      const put = await fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": "text/plain", Origin: origin },
+        body: "cors",
+      });
+      const putAllow = put.headers.get("access-control-allow-origin");
+      steps.browserUpload =
+        put.status === 200
+          ? putAllow
+            ? "ok"
+            : `upload ok but no CORS header for ${origin}`
+          : `${put.status}: ${(await put.text()).slice(0, 140)}`;
+      await client.send(new DeleteObjectCommand({ Bucket, Key: Key2 }));
+    } catch (e) {
+      steps.browserUpload = errText(e);
+    }
+  }
+
   const ok =
-    steps.write === "ok" && steps.read === "ok" && steps.delete === "ok";
+    steps.write === "ok" &&
+    steps.read === "ok" &&
+    steps.delete === "ok" &&
+    steps.preflight?.startsWith("ok") === true &&
+    steps.browserUpload === "ok";
 
   return NextResponse.json({
     storage: "r2",
