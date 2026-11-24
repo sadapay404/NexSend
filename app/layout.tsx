@@ -1,0 +1,54 @@
+import type { Metadata, Viewport } from "next";
+import "./globals.css";
+import { getCurrentUser } from "@/lib/auth";
+import Sidebar from "@/components/Sidebar";
+import Topbar from "@/components/Topbar";
+import { AppStateProvider } from "@/components/AppStateProvider";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  title: "NexSend — Digital Sheikh Nexus",
+  description: "Private transfer for Digital Sheikh Nexus Training Institute",
+  icons: { icon: "/logo.jpg", apple: "/logo.jpg" },
+  openGraph: { images: ["/logo.jpg"] },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#000000",
+  width: "device-width",
+  initialScale: 1,
+};
+
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return (
+      <html lang="en">
+        <body className="bg-black text-white min-h-screen">{children}</body>
+      </html>
+    );
+  }
+
+  return (
+    <html lang="en">
+      <body className="bg-black text-white min-h-screen">
+        <AppStateProvider>
+          <div className="flex min-h-screen">
+            <Sidebar user={user} />
+            <div className="flex-1 flex flex-col min-w-0">
+              <Topbar user={user} />
+              <main className="flex-1 px-4 py-5 md:px-8 md:py-8 w-full max-w-5xl mx-auto">
+                {children}
+              </main>
+            </div>
+          </div>
+        </AppStateProvider>
+      </body>
+    </html>
+  );
+}

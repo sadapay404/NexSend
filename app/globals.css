@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --nexus-green: #00A651;
+  --nexus-deep: #00803D;
+}
+
+html, body {
+  background: #000000;
+  color: #ffffff;
+  font-family: Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: #00A651;
+  color: #000;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #0a0a0a; }
+::-webkit-scrollbar-thumb { background: #1f1f1f; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #00A651; }
