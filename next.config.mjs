@@ -8,6 +8,9 @@ const nextConfig = {
       "/api/**/*": ["./node_modules/@electric-sql/pglite/**"],
     },
   },
+  async redirects() {
+    return [{ source: "/incoming", destination: "/receive", permanent: false }];
+  },
   async headers() {
     return [
       {

@@ -223,8 +223,8 @@ export default function SendPage() {
     <div className="space-y-6">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Send</h1>
-          <p className="text-sm text-white/45 mt-0.5">
+          <h1 className="hidden md:block text-2xl font-bold tracking-tight">Send</h1>
+          <p className="text-xs md:text-sm text-white/45 md:mt-0.5">
             {onlineCount > 0
               ? `${onlineCount} of ${people.length} online`
               : `${people.length} people · nobody online`}
@@ -255,21 +255,27 @@ export default function SendPage() {
       </section>
 
       <section className="rounded-2xl border border-nexus-border bg-nexus-card overflow-hidden">
-        <div className="flex border-b border-nexus-border">
-          {(["text", "files"] as const).map((m) => (
-            <button
-              key={m}
-              onClick={() => setMode(m)}
+        <div className="p-2">
+          <div className="relative flex bg-black/50 border border-nexus-border rounded-xl p-1">
+            <span
               className={cn(
-                "flex-1 py-3 text-sm font-medium transition-colors",
-                mode === m
-                  ? "text-white border-b-2 border-nexus-green -mb-px"
-                  : "text-white/40 hover:text-white/70"
+                "absolute inset-y-1 w-[calc(50%-4px)] rounded-lg bg-nexus-green transition-transform duration-300 ease-out",
+                mode === "text" ? "translate-x-0" : "translate-x-[calc(100%+4px)]"
               )}
-            >
-              {m === "text" ? "Text" : "Files"}
-            </button>
-          ))}
+            />
+            {(["text", "files"] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => setMode(m)}
+                className={cn(
+                  "relative flex-1 py-2.5 text-sm font-semibold rounded-lg transition-colors duration-200",
+                  mode === m ? "text-black" : "text-white/45"
+                )}
+              >
+                {m === "text" ? "Text" : "Files"}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="p-4">
@@ -278,7 +284,7 @@ export default function SendPage() {
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                placeholder="Type or paste anything — links, codes, notes"
+                placeholder="Type or Paste Anything"
                 rows={6}
                 className="w-full bg-black/40 border border-nexus-border rounded-xl px-3.5 py-3 text-sm outline-none focus:border-nexus-green resize-y"
               />
@@ -300,9 +306,6 @@ export default function SendPage() {
                   <ClipboardPaste className="w-3.5 h-3.5" />
                   Paste from clipboard
                 </button>
-                <span className="text-[11px] text-white/30">
-                  {text.length} characters
-                </span>
               </div>
             </div>
           ) : (
@@ -326,16 +329,16 @@ export default function SendPage() {
                 <p className="text-[11px] text-white/35 mt-1">
                   Images, videos, documents, whole folders — original quality, up to 2 GB
                 </p>
-                <div className="flex items-center justify-center gap-2 mt-4">
+                <div className="grid grid-cols-2 gap-2 mt-4 max-w-xs mx-auto">
                   <button
                     onClick={() => fileInput.current?.click()}
-                    className="text-xs bg-white/10 hover:bg-white/15 px-3 py-2 rounded-lg"
+                    className="text-xs bg-white/10 hover:bg-white/15 active:scale-95 px-3 py-3 rounded-xl transition-all"
                   >
                     Choose files
                   </button>
                   <button
                     onClick={() => folderInput.current?.click()}
-                    className="inline-flex items-center gap-1.5 text-xs bg-white/10 hover:bg-white/15 px-3 py-2 rounded-lg"
+                    className="inline-flex items-center justify-center gap-1.5 text-xs bg-white/10 hover:bg-white/15 active:scale-95 px-3 py-3 rounded-xl transition-all"
                   >
                     <FolderUp className="w-3.5 h-3.5" />
                     Choose folder
@@ -420,9 +423,9 @@ export default function SendPage() {
                         </div>
 
                         {item.status === "uploading" && (
-                          <div className="mt-2 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                          <div className="mt-2 h-1.5 rounded-full bg-white/10 overflow-hidden progress-track">
                             <div
-                              className="h-full bg-nexus-green transition-[width]"
+                              className="h-full progress-fill rounded-full"
                               style={{ width: `${Math.round(item.progress * 100)}%` }}
                             />
                           </div>
@@ -448,7 +451,7 @@ export default function SendPage() {
           <button
             onClick={mode === "text" ? sendText : sendFiles}
             disabled={!canSend}
-            className="inline-flex items-center gap-2 bg-nexus-green text-black text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-[#009648] disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex-1 md:flex-none justify-center inline-flex items-center gap-2 bg-nexus-green text-black text-sm font-semibold px-5 py-3 md:py-2.5 rounded-xl hover:bg-[#009648] hover:shadow-[0_10px_30px_-10px_rgba(0,166,81,0.9)] active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:shadow-none"
           >
             {sending ? (
               <Loader2 className="w-4 h-4 animate-spin" />

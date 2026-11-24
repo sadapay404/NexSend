@@ -6,7 +6,7 @@ import { useApp } from "@/components/AppStateProvider";
 import TransferCard from "@/components/TransferCard";
 import { cn } from "@/lib/utils";
 
-export default function IncomingPage() {
+export default function ReceivePage() {
   const { state, loading, refresh } = useApp();
   const [showExpired, setShowExpired] = useState(false);
 
@@ -24,27 +24,28 @@ export default function IncomingPage() {
   const pending = live.filter((t) => t.myStatus === "pending");
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Incoming</h1>
+    <div className="space-y-5">
+      <div className="hidden md:block">
+        <h1 className="text-2xl font-bold tracking-tight">Receive</h1>
         <p className="text-sm text-white/45 mt-0.5">
-          {pending.length > 0
-            ? `${pending.length} waiting for you`
-            : "Nothing waiting — you are all caught up"}
+          {pending.length > 0 ? `${pending.length} waiting` : "Nothing waiting"}
         </p>
       </div>
 
+      {pending.length > 0 && (
+        <p className="md:hidden text-xs text-white/45">
+          {pending.length} waiting for you
+        </p>
+      )}
+
       {live.length === 0 && (
-        <div className="rounded-2xl border border-nexus-border bg-nexus-card p-10 text-center">
-          <Inbox className="w-8 h-8 mx-auto text-white/20" />
-          <p className="text-sm text-white/50 mt-3">Nothing here yet</p>
-          <p className="text-xs text-white/30 mt-1">
-            Files sent to you appear here the moment they arrive.
-          </p>
+        <div className="rounded-2xl border border-nexus-border bg-nexus-card p-12 text-center animate-pop">
+          <Inbox className="w-9 h-9 mx-auto text-white/20" />
+          <p className="text-sm text-white/50 mt-3">Nothing waiting</p>
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-3 stagger">
         {live.map((item) => (
           <TransferCard
             key={item.id}
@@ -59,13 +60,11 @@ export default function IncomingPage() {
         <div>
           <button
             onClick={() => setShowExpired(!showExpired)}
-            className="text-xs font-semibold uppercase tracking-wider text-white/40 hover:text-white"
+            className="text-xs font-semibold uppercase tracking-wider text-white/40 hover:text-white press"
           >
             Expired ({expired.length}) {showExpired ? "−" : "+"}
           </button>
-          <div
-            className={cn("space-y-2 mt-3", showExpired ? "block" : "hidden")}
-          >
+          <div className={cn("space-y-3 mt-3", showExpired ? "block" : "hidden")}>
             {expired.map((item) => (
               <TransferCard
                 key={item.id}

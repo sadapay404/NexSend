@@ -11,6 +11,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { cn, formatTime } from "@/lib/utils";
+import AdminTabs from "@/components/AdminTabs";
 
 type AdminUser = {
   id: string;
@@ -103,12 +104,13 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-5">
+      <AdminTabs />
+
       <div className="flex items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Users</h1>
-          <p className="text-sm text-white/45 mt-0.5">
-            {users.length} account{users.length === 1 ? "" : "s"} · you control every
-            username and password
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight">People</h1>
+          <p className="text-xs md:text-sm text-white/45 mt-0.5">
+            {users.length} account{users.length === 1 ? "" : "s"}
           </p>
         </div>
         <button
@@ -116,7 +118,7 @@ export default function AdminUsersPage() {
             setForm(empty);
             setError("");
           }}
-          className="inline-flex items-center gap-2 bg-nexus-green text-black text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-[#009648]"
+          className="inline-flex items-center gap-2 bg-nexus-green text-black text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-[#009648] active:scale-95 transition-all"
         >
           <Plus className="w-4 h-4" />
           Add user
@@ -134,7 +136,7 @@ export default function AdminUsersPage() {
       ) : (
         <div className="rounded-2xl border border-nexus-border bg-nexus-card overflow-hidden divide-y divide-nexus-border">
           {users.map((u) => (
-            <div key={u.id} className="p-3.5 flex items-center gap-3">
+            <div key={u.id} className="p-3.5 flex items-center gap-3 hover:bg-white/[0.03] transition-colors">
               <span className="relative shrink-0">
                 <span
                   className={cn(

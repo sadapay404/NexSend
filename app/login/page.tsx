@@ -40,13 +40,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-5">
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-sm animate-fade-up">
         <div className="flex flex-col items-center mb-8">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/logo.jpg"
             alt="Digital Sheikh Nexus"
-            className="w-20 h-20 rounded-2xl object-cover mb-5"
+            className="w-20 h-20 rounded-2xl object-cover mb-5 animate-float tilt"
           />
           <h1 className="text-2xl font-bold tracking-tight">NexSend</h1>
           <p className="text-sm text-white/50 mt-1">
@@ -65,7 +65,7 @@ export default function LoginPage() {
               autoComplete="username"
               autoCapitalize="none"
               spellCheck={false}
-              className="w-full bg-nexus-card border border-nexus-border rounded-xl px-4 py-3 text-sm outline-none focus:border-nexus-green transition-colors"
+              className="w-full bg-nexus-card border border-nexus-border rounded-xl px-4 py-3.5 text-sm outline-none focus:border-nexus-green focus:shadow-[0_0_0_3px_rgba(0,166,81,0.15)] transition-all"
               placeholder="Your username"
             />
           </div>
@@ -80,7 +80,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
-                className="w-full bg-nexus-card border border-nexus-border rounded-xl px-4 py-3 pr-11 text-sm outline-none focus:border-nexus-green transition-colors"
+                className="w-full bg-nexus-card border border-nexus-border rounded-xl px-4 py-3.5 pr-11 text-sm outline-none focus:border-nexus-green focus:shadow-[0_0_0_3px_rgba(0,166,81,0.15)] transition-all"
                 placeholder="Your password"
               />
               <button
@@ -96,7 +96,7 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+            <p className="animate-pop text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
               {error}
             </p>
           )}
@@ -104,7 +104,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading || !username || !password}
-            className="w-full bg-nexus-green text-black font-semibold rounded-xl py-3 text-sm hover:bg-[#009648] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-nexus-green text-black font-semibold rounded-xl py-3.5 text-sm hover:bg-[#009648] hover:shadow-[0_12px_34px_-12px_rgba(0,166,81,0.9)] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none transition-all flex items-center justify-center gap-2"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
             Sign in

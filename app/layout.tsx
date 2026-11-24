@@ -3,6 +3,8 @@ import "./globals.css";
 import { getCurrentUser } from "@/lib/auth";
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
+import BottomNav from "@/components/BottomNav";
+import PageTransition from "@/components/PageTransition";
 import { AppStateProvider } from "@/components/AppStateProvider";
 
 export const metadata: Metadata = {
@@ -25,6 +27,7 @@ export const viewport: Viewport = {
   themeColor: "#000000",
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
 };
 
 export default async function RootLayout({
@@ -50,11 +53,12 @@ export default async function RootLayout({
             <Sidebar user={user} />
             <div className="flex-1 flex flex-col min-w-0">
               <Topbar user={user} />
-              <main className="flex-1 px-4 py-5 md:px-8 md:py-8 w-full max-w-5xl mx-auto">
-                {children}
+              <main className="flex-1 px-4 pt-4 pb-28 md:px-8 md:py-8 md:pb-8 w-full max-w-5xl mx-auto">
+                <PageTransition>{children}</PageTransition>
               </main>
             </div>
           </div>
+          <BottomNav role={user.role} />
         </AppStateProvider>
       </body>
     </html>

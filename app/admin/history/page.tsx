@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { formatBytes, formatTime, cn } from "@/lib/utils";
+import AdminTabs from "@/components/AdminTabs";
 
 type Row = {
   id: string;
@@ -31,12 +32,14 @@ export default function AdminHistoryPage() {
 
   return (
     <div className="space-y-5">
+      <AdminTabs />
+
       <div>
-        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+        <h1 className="text-xl md:text-2xl font-bold tracking-tight flex items-center gap-2">
           Activity <ShieldCheck className="w-5 h-5 text-nexus-green" />
         </h1>
-        <p className="text-sm text-white/45 mt-0.5">
-          Every transfer on the system — including ones people removed.
+        <p className="text-xs md:text-sm text-white/45 mt-0.5">
+          Every transfer, including removed ones.
         </p>
       </div>
 

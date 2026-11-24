@@ -57,15 +57,12 @@ export default function HistoryPage() {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+        <div className="hidden md:block">
           <h1 className="text-2xl font-bold tracking-tight">History</h1>
-          <p className="text-sm text-white/45 mt-0.5">
-            Every transfer stays listed. Files can be downloaded for 1 hour.
-          </p>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 sticky top-[57px] md:static z-20 bg-black md:bg-transparent py-1 md:py-0 -mx-4 px-4 md:mx-0 md:px-0">
         <div className="flex bg-nexus-card border border-nexus-border rounded-xl p-1">
           {(["all", "sent", "received"] as Scope[]).map((s) => (
             <button
@@ -102,7 +99,7 @@ export default function HistoryPage() {
           <p className="text-sm text-white/50 mt-3">No transfers yet</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {rows.map((item) => (
             <TransferCard
               key={`${item._p}-${item.id}`}

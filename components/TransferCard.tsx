@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FileText,
   Image as ImageIcon,
@@ -56,7 +56,6 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
   const [started, setStarted] = useState(false);
-  const mounted = useRef(Date.now());
 
   const isText = item.type === "text" || item.type === "clipboard";
   const live = !item.expired;
@@ -122,7 +121,7 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
     if (perspective === "received") {
       switch (item.myStatus) {
         case "pending":
-          return "Waiting for you";
+          return "Waiting";
         case "accepted":
           return "Accepted";
         case "downloaded":
@@ -135,18 +134,21 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
     }
     if (item.recipients.length === 0) return "No recipient";
     if (item.recipients.every((r) => r.status === "downloaded")) return "Delivered";
-    if (item.recipients.some((r) => r.status === "downloaded")) return "Partly downloaded";
+    if (item.recipients.some((r) => r.status === "downloaded")) return "Partly";
     if (item.recipients.some((r) => r.status === "accepted")) return "Accepted";
     if (item.recipients.every((r) => r.status === "declined")) return "Declined";
     return "Waiting";
   })();
 
-  const isImage = item.type === "image";
-
   return (
-    <div className="rounded-2xl border border-nexus-border bg-nexus-card p-4">
+    <div
+      className={cn(
+        "lift rounded-2xl border bg-nexus-card p-4 animate-fade-up",
+        needsAction ? "border-nexus-green/60" : "border-nexus-border"
+      )}
+    >
       <div className="flex gap-3">
-        <div className="w-10 h-10 rounded-xl bg-white/5 grid place-items-center shrink-0">
+        <div className="w-11 h-11 rounded-xl bg-white/5 grid place-items-center shrink-0">
           <TypeIcon type={item.type} className="w-5 h-5 text-nexus-green" />
         </div>
 
@@ -160,8 +162,8 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
                     : "Text"
                   : item.fileName ?? "File"}
               </p>
-              <p className="text-[11px] text-white/40 mt-0.5">
-                {perspective === "sent" ? "To" : "From"}{" "}
+              <p className="text-[11px] text-white/40 mt-0.5 truncate">
+                {perspective === "sent" ? "To " : "From "}
                 {perspective === "sent"
                   ? item.recipients.map((r) => r.displayName).join(", ") || "—"
                   : item.senderName}
@@ -173,10 +175,10 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
 
             <span
               className={cn(
-                "text-[11px] px-2 py-1 rounded-md whitespace-nowrap font-medium",
+                "text-[10px] px-2 py-1 rounded-md whitespace-nowrap font-semibold uppercase tracking-wide",
                 item.expired
                   ? "bg-white/5 text-white/40"
-                  : item.myStatus === "pending" && perspective === "received"
+                  : needsAction
                   ? "bg-nexus-green/15 text-nexus-green"
                   : "bg-white/5 text-white/60"
               )}
@@ -192,7 +194,7 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
               </p>
               <button
                 onClick={copyText}
-                className="mt-2 inline-flex items-center gap-1.5 text-xs text-nexus-green hover:underline"
+                className="mt-2 inline-flex items-center gap-1.5 text-xs text-nexus-green hover:underline active:scale-95 transition-transform"
               >
                 {copied ? <Check className="w-3.5 h-3.5" /> : <ClipboardCopy className="w-3.5 h-3.5" />}
                 {copied ? "Copied" : "Copy"}
@@ -200,12 +202,12 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
             </div>
           )}
 
-          {isImage && live && (
+          {isText === false && item.type === "image" && live && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={`/api/transfers/${item.id}/download?inline=1`}
               alt={item.fileName ?? "image"}
-              className="mt-3 rounded-lg max-h-64 object-contain bg-black/40"
+              className="mt-3 rounded-xl max-h-64 w-full object-contain bg-black/40"
               loading="lazy"
             />
           )}
@@ -214,30 +216,36 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
             <video
               src={`/api/transfers/${item.id}/download?inline=1`}
               controls
-              className="mt-3 rounded-lg max-h-64 w-full bg-black/40"
+              playsInline
+              className="mt-3 rounded-xl max-h-64 w-full bg-black/40"
             />
           )}
 
-          <div className="flex items-center gap-2 mt-3 flex-wrap">
+          {/* actions */}
+          <div className="mt-3 flex items-center gap-2 flex-wrap">
             {needsAction && (
-              <>
+              <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex">
                 <button
                   onClick={() => act("accepted")}
                   disabled={busy}
-                  className="inline-flex items-center gap-1.5 bg-nexus-green text-black text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-[#009648] disabled:opacity-50"
+                  className="inline-flex items-center justify-center gap-1.5 bg-nexus-green text-black text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-[#009648] active:scale-95 transition-all disabled:opacity-50"
                 >
-                  {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                  {busy ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Check className="w-4 h-4" />
+                  )}
                   Accept
                 </button>
                 <button
                   onClick={() => act("declined")}
                   disabled={busy}
-                  className="inline-flex items-center gap-1.5 border border-nexus-border text-xs px-3 py-1.5 rounded-lg hover:border-white/30"
+                  className="inline-flex items-center justify-center gap-1.5 border border-nexus-border text-sm px-4 py-2.5 rounded-xl hover:border-white/30 active:scale-95 transition-all"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-4 h-4" />
                   Decline
                 </button>
-              </>
+              </div>
             )}
 
             {canDownload && (
@@ -247,12 +255,12 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
                   setStarted(true);
                   setTimeout(() => onChanged?.(), 800);
                 }}
-                className="inline-flex items-center gap-1.5 bg-white/10 text-xs px-3 py-1.5 rounded-lg hover:bg-white/15"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-white/10 text-sm px-4 py-2.5 rounded-xl hover:bg-white/15 active:scale-95 transition-all"
               >
                 {started ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <Download className="w-3.5 h-3.5" />
+                  <Download className="w-4 h-4" />
                 )}
                 {started ? "Downloading" : item.fileSize ? formatBytes(item.fileSize) : "Download"}
               </a>
@@ -266,9 +274,9 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
               onClick={remove}
               disabled={busy}
               aria-label="Remove from list"
-              className="p-1.5 rounded-lg text-white/35 hover:text-red-400 hover:bg-white/5"
+              className="p-2 rounded-lg text-white/35 hover:text-red-400 hover:bg-white/5 active:scale-90 transition-all"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <Trash2 className="w-4 h-4" />
             </button>
           </div>
 

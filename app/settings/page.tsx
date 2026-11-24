@@ -70,13 +70,12 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="hidden md:block">
         <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
-        <p className="text-sm text-white/45 mt-0.5">Your account and receiving rules</p>
       </div>
 
       {/* Profile */}
-      <section className="rounded-2xl border border-nexus-border bg-nexus-card overflow-hidden">
+      <section className="lift rounded-2xl border border-nexus-border bg-nexus-card overflow-hidden">
         <h2 className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/40 border-b border-nexus-border">
           Profile
         </h2>
@@ -90,7 +89,7 @@ export default function SettingsPage() {
               className="w-full bg-black/40 border border-nexus-border rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-nexus-green"
             />
             <p className="text-[11px] text-white/30 mt-1">
-              This is the name other people see when they send to you.
+              The name others see when they send to you
             </p>
           </div>
 
@@ -102,7 +101,7 @@ export default function SettingsPage() {
               className="w-full bg-black/20 border border-nexus-border rounded-xl px-3.5 py-2.5 text-sm text-white/50 outline-none cursor-not-allowed"
             />
             <p className="text-[11px] text-white/30 mt-1">
-              Private. Only the administrator can change your username and password.
+              Private. Only the administrator can change this and your password.
             </p>
           </div>
 
@@ -120,7 +119,7 @@ export default function SettingsPage() {
       </section>
 
       {/* Receiving */}
-      <section className="rounded-2xl border border-nexus-border bg-nexus-card overflow-hidden">
+      <section className="lift rounded-2xl border border-nexus-border bg-nexus-card overflow-hidden">
         <h2 className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/40 border-b border-nexus-border flex items-center gap-2">
           Receiving
           {savingMode && <Loader2 className="w-3 h-3 animate-spin" />}
@@ -130,17 +129,17 @@ export default function SettingsPage() {
             {
               value: "none" as const,
               title: "Ask me every time",
-              desc: "Accepted manually. This is the default.",
+              desc: "Accept each transfer yourself",
             },
             {
               value: "favs" as const,
               title: "Auto-accept favorites",
-              desc: "People you starred are accepted the moment they send.",
+              desc: "Favorites are accepted instantly",
             },
             {
               value: "all" as const,
               title: "Auto-accept everyone",
-              desc: "Every incoming transfer is accepted without asking.",
+              desc: "Everything is accepted instantly",
             },
           ].map((option) => (
             <button
@@ -173,7 +172,7 @@ export default function SettingsPage() {
       </section>
 
       {/* Favorites */}
-      <section className="rounded-2xl border border-nexus-border bg-nexus-card overflow-hidden">
+      <section className="lift rounded-2xl border border-nexus-border bg-nexus-card overflow-hidden">
         <h2 className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/40 border-b border-nexus-border">
           Favorites
         </h2>
@@ -227,7 +226,7 @@ export default function SettingsPage() {
       </section>
 
       {/* Appearance / language */}
-      <section className="rounded-2xl border border-nexus-border bg-nexus-card overflow-hidden">
+      <section className="lift rounded-2xl border border-nexus-border bg-nexus-card overflow-hidden">
         <h2 className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/40 border-b border-nexus-border">
           Appearance
         </h2>
@@ -245,19 +244,23 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      {/* About */}
-      <section className="rounded-2xl border border-nexus-border bg-nexus-card overflow-hidden">
+      {/* Credits */}
+      <section className="lift rounded-2xl border border-nexus-border bg-nexus-card overflow-hidden">
         <h2 className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/40 border-b border-nexus-border">
           About
         </h2>
-        <div className="p-4 space-y-2 text-xs text-white/45">
-          <p className="flex items-center gap-2">
-            <ShieldCheck className="w-3.5 h-3.5 text-nexus-green" />
-            Signed in for 30 days on this device
-          </p>
-          <p>Files are removed from storage 1 hour after sending.</p>
-          <p>History is kept until you remove it. The administrator can see it too.</p>
-          <p className="pt-2 text-white/25">NexSend · {me.role === "admin" ? "Administrator" : "Member"}</p>
+        <div className="p-4 space-y-3 text-sm">
+          {[
+            ["Created by", "Mubashir"],
+            ["Co-creator", "Sir Sheikh Arsalan"],
+            ["Created for", "Digital Sheikh Nexus"],
+            ["Copyright", "© 2026 Digital Sheikh Nexus"],
+          ].map(([label, value]) => (
+            <div key={label} className="flex items-baseline justify-between gap-4">
+              <span className="text-xs text-white/35">{label}</span>
+              <span className="text-sm text-right">{value}</span>
+            </div>
+          ))}
         </div>
       </section>
 
