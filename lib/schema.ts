@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS transfers (
   uploaded_parts JSONB NOT NULL DEFAULT '[]'::jsonb,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('uploading','ready','failed')),
   deleted_by_sender BOOLEAN NOT NULL DEFAULT FALSE,
-  expires_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '1 hour'),
+  expires_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '3 hours'),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

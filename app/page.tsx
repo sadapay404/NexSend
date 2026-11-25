@@ -48,7 +48,7 @@ function iconFor(type: TransferType) {
 
 export default function SendPage() {
   const { state, refresh, patchPerson } = useApp();
-  const [mode, setMode] = useState<"text" | "files">("text");
+  const [mode, setMode] = useState<"text" | "files">("files");
   const [text, setText] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [staged, setStaged] = useState<Staged[]>([]);
@@ -271,10 +271,10 @@ export default function SendPage() {
             <span
               className={cn(
                 "absolute inset-y-1 w-[calc(50%-4px)] rounded-lg bg-nexus-green transition-transform duration-300 ease-out",
-                mode === "text" ? "translate-x-0" : "translate-x-[calc(100%+4px)]"
+                mode === "files" ? "translate-x-0" : "translate-x-[calc(100%+4px)]"
               )}
             />
-            {(["text", "files"] as const).map((m) => (
+            {(["files", "text"] as const).map((m) => (
               <button
                 key={m}
                 onClick={() => setMode(m)}

@@ -46,7 +46,7 @@ Text arrives instantly, no download needed: read it and press **Copy**.
 
 **History** lists everything you sent and received, with a search box and filters.
 
-- Files can be downloaded again for **1 hour** after they were sent.
+- Files can be downloaded again for **3 hours** after they were sent.
 - After that the row stays, marked **Expired**, but the file itself is gone.
 - The trash icon removes an entry from your list. The administrator keeps the record.
 
@@ -63,5 +63,5 @@ Text arrives instantly, no download needed: read it and press **Copy**.
 ## Good to know
 
 - The site is dark only, and works on phone, tablet and desktop.
-- Files are deleted an hour after sending, so download what you need.
+- Files are deleted three hours after sending, so download what you need.
 - Everything you send goes only to the people you picked.

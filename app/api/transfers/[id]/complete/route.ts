@@ -53,7 +53,7 @@ export async function POST(
 
     await query(
       `UPDATE transfers
-       SET status = 'ready', expires_at = NOW() + INTERVAL '1 hour'
+       SET status = 'ready', expires_at = NOW() + INTERVAL '3 hours'
        WHERE id = $1`,
       [params.id]
     );

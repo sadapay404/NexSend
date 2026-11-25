@@ -47,7 +47,7 @@ You cannot delete yourself, and other admin rows are protected.
 **Activity** shows every transfer on the system in time order: sender, recipients,
 file name and size, whether the download window is still open, and whether the
 sender removed it from their own history. It never shows file contents after the
-hour is over — the bytes are gone at that point.
+three hours are over — the bytes are gone at that point.
 
 ## Display names and photos
 
@@ -56,7 +56,7 @@ yours. Photos are self-managed by design — you cannot set or clear someone els
 
 ## Storage and retention
 
-- Files are stored for **1 hour** after sending, then deleted.
+- Files are stored for **3 hours** after sending, then deleted.
 - History rows stay until someone removes them; you always see them in **Activity**.
 - Each transfer can be up to **2 GB**. Folders are zipped in the sender's browser.
 - Free tiers used: Neon Postgres (database) and Cloudflare R2 (file storage, 10 GB).
@@ -66,6 +66,6 @@ yours. Photos are self-managed by design — you cannot set or clear someone els
 | Symptom | What to do |
 |---|---|
 | Someone cannot sign in | Reset their password in **Users** |
-| A file will not download | It may be past the 1 hour window — ask the sender to send again |
+| A file will not download | It may be past the 3 hour window — ask the sender to send again |
 | Upload fails on a huge file | Ask them to try again; uploads resume where they stopped |
 | You locked yourself out | In Vercel, update `ADMIN_USERNAME` / `ADMIN_PASSWORD` and delete the admin row in the database, then reload the site — a fresh admin is created on the next request |

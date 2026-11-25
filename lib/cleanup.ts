@@ -5,7 +5,7 @@ let lastSweep = 0;
 export const SWEEP_INTERVAL_MS = 5 * 60 * 1000;
 
 /**
- * Bytes live for one hour. Metadata stays forever; only the object is removed.
+ * Bytes live for three hours. Metadata stays forever; only the object is removed.
  */
 export async function sweepExpired(limit = 10): Promise<number> {
   const rows = await query<{ id: string; storage_key: string }>(

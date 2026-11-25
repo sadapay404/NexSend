@@ -86,7 +86,7 @@ export async function GET(
     if (new Date(t.expires_at).getTime() < Date.now()) {
       return problem(
         "Download window closed",
-        "Files stay available for one hour after they are sent. This one has expired — ask the sender to send it again.",
+        "Files stay available for three hours after they are sent. This one has expired — ask the sender to send it again.",
         410
       );
     }

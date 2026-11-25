@@ -2,7 +2,7 @@
 
 Private transfer for **Digital Sheikh Nexus Training Institute** — send text, clipboard, images, videos, files and whole folders to one person or your whole team, from any browser.
 
-Think LocalSend, but over the internet: both sides see progress live, and nothing is stored longer than an hour.
+Think LocalSend, but over the internet: both sides see progress live, and nothing is stored longer than three hours.
 
 ## What it does
 
@@ -11,7 +11,7 @@ Think LocalSend, but over the internet: both sides see progress live, and nothin
 - **Multi-recipient** — pick one person or several.
 - **Live progress** on both sides, with in-app notifications.
 - **Accept or decline.** Auto-accept can be turned on for favorites or for everyone in Settings.
-- **History** keeps every transfer. Files can be re-downloaded for 1 hour, then the bytes are deleted and the row stays as `Expired`.
+- **History** keeps every transfer. Files can be re-downloaded for 3 hours, then the bytes are deleted and the row stays as `Expired`.
 - **Profile pictures** users upload and manage themselves — the admin cannot change them.
 - **Admin** manages usernames, display names and passwords; users can only change their own display name and photo.
 - Dark only. Black + `#00A651` + white, logo from `public/logo.jpg`.
@@ -71,7 +71,7 @@ The schema is created automatically on first request.
 1. Sender picks recipients, adds text or files.
 2. Files go straight from the browser to storage through a short-lived signed URL — the app server never proxies gigabytes. Files over 64 MB are uploaded in 32 MB parts, so an interrupted upload resumes where it stopped.
 3. Recipients see the transfer on their next poll (every 3 seconds), accept it, and download with their own progress.
-4. One hour after sending, the stored bytes are deleted; the history row keeps name, size, sender, recipients and status.
+4. Three hours after sending, the stored bytes are deleted; the history row keeps name, size, sender, recipients and status.
 
 Folders are zipped in the browser before upload, so the receiver downloads a single `.zip`.
 
