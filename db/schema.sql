@@ -64,6 +64,7 @@ CREATE INDEX IF NOT EXISTS idx_users_last_seen ON users(last_seen);
 
 -- Profile pictures (stored with the account, nobody else can change them)
 ALTER TABLE transfers ADD COLUMN IF NOT EXISTS storage_kind TEXT;
+ALTER TABLE transfers ALTER COLUMN expires_at SET DEFAULT (NOW() + INTERVAL '3 hours');
 ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar BYTEA;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_mime TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_updated_at TIMESTAMPTZ;

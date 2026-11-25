@@ -54,8 +54,9 @@ export async function POST(req: Request) {
 
     const transfer = await queryOne<{ id: string }>(
       `INSERT INTO transfers
-         (sender_id, type, title, text_content, file_name, file_size, mime_type, storage_key, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+         (sender_id, type, title, text_content, file_name, file_size, mime_type,
+          storage_key, status, expires_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9, NOW() + INTERVAL '3 hours')
        RETURNING id`,
       [
         user.userId,
