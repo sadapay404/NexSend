@@ -28,7 +28,7 @@ function errText(e: unknown) {
  * bucket name and endpoint are right. Browser CORS is proven separately by
  * actually sending a file.
  */
-export async function GET() {
+export async function GET(req: Request) {
   const missing = VARS.filter((v) => !process.env[v]);
   if (missing.length) {
     return NextResponse.json({
@@ -88,7 +88,9 @@ export async function GET() {
   // Simulate exactly what the browser does: presigned PUT straight to R2 with
   // an Origin header. Catches a missing CORS rule before a real upload fails.
   if (steps.write === "ok") {
-    const origin = "https://nexsend-sand.vercel.app";
+    const host =
+      req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? "";
+    const origin = `https://${host || "nexsend-by-arsalan.vercel.app"}`;
     const Key2 = `_selftest/cors-${Date.now()}.txt`;
     try {
       const url = await getSignedUrl(
