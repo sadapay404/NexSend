@@ -78,20 +78,24 @@ export async function sendFile(params: {
         const info = await res.json();
         if (Number(info.file?.size) === total && info.file?.name === file.name) {
           transferId = saved;
-          plan =
-            info.uploadId && info.uploaded
-              ? {
-                  mode: "multipart",
-                  uploadId: info.uploadId,
-                  partSize: info.partSize,
-                  totalParts: info.totalParts,
-                }
-              : { mode: "local", uploadUrl: `/api/upload?transferId=${saved}` };
-          if (plan.mode === "multipart") {
+          if (info.mode === "multipart" && info.uploadId) {
+            plan = {
+              mode: "multipart",
+              uploadId: info.uploadId,
+              partSize: info.partSize,
+              totalParts: info.totalParts,
+            };
             (plan as any).uploaded = info.uploaded as {
               partNumber: number;
               etag: string;
             }[];
+          } else if (info.mode === "single" && info.uploadUrl) {
+            plan = { mode: "single", uploadUrl: info.uploadUrl };
+          } else {
+            plan = {
+              mode: "local",
+              uploadUrl: `/api/upload?transferId=${saved}`,
+            };
           }
         }
       }

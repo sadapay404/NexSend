@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
 import { handleError, requireUser } from "@/lib/api";
-import { listUploadedParts, partSize, signParts } from "@/lib/storage";
+import {
+  isR2Configured,
+  listUploadedParts,
+  partSize,
+  presignSingle,
+  signParts,
+} from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 
@@ -29,11 +35,25 @@ export async function GET(
     }
 
     const size = Number(t.file_size);
-    const uploaded = t.upload_id
-      ? await listUploadedParts(t.storage_key, t.upload_id)
-      : [];
+    const r2on = isR2Configured();
+    const uploaded =
+      r2on && t.upload_id ? await listUploadedParts(t.storage_key, t.upload_id) : [];
+
+    // Tell the client exactly how to continue, including the single-shot case.
+    let mode: "multipart" | "single" | "local" = "local";
+    let uploadUrl: string | undefined;
+    if (r2on) {
+      if (t.upload_id) {
+        mode = "multipart";
+      } else {
+        mode = "single";
+        uploadUrl = await presignSingle(t.storage_key);
+      }
+    }
 
     return NextResponse.json({
+      mode,
+      uploadUrl,
       uploadId: t.upload_id,
       partSize: partSize(),
       totalParts: Math.max(1, Math.ceil(size / partSize())),

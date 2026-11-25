@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS transfers (
   file_size BIGINT,
   mime_type TEXT,
   storage_key TEXT,
+  storage_kind TEXT,
   upload_id TEXT,
   uploaded_parts JSONB NOT NULL DEFAULT '[]'::jsonb,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('uploading','ready','failed')),
@@ -66,6 +67,7 @@ CREATE INDEX IF NOT EXISTS idx_transfers_expires ON transfers(expires_at);
 CREATE INDEX IF NOT EXISTS idx_users_last_seen ON users(last_seen);
 
 -- Profile pictures (stored with the account, nobody else can change them)
+ALTER TABLE transfers ADD COLUMN IF NOT EXISTS storage_kind TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar BYTEA;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_mime TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_updated_at TIMESTAMPTZ;

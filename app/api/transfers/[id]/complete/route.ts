@@ -5,7 +5,7 @@ import {
   completeMultipart,
   isR2Configured,
   listUploadedParts,
-  localExists,
+  objectExists,
 } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
@@ -30,11 +30,25 @@ export async function POST(
         ? body.parts
         : await listUploadedParts(t.storage_key, t.upload_id);
       if (parts.length === 0) {
+        await query(`UPDATE transfers SET status = 'failed' WHERE id = $1`, [
+          params.id,
+        ]);
         return NextResponse.json({ error: "No parts uploaded" }, { status: 400 });
       }
       await completeMultipart(t.storage_key, t.upload_id, parts);
-    } else if (!isR2Configured() && !localExists(t.storage_key)) {
-      return NextResponse.json({ error: "Upload incomplete" }, { status: 400 });
+    }
+
+    // Never trust the browser: confirm the bytes are really in storage before
+    // the transfer is advertised as downloadable.
+    const exists = await objectExists(t.storage_key);
+    if (!exists) {
+      await query(`UPDATE transfers SET status = 'failed' WHERE id = $1`, [
+        params.id,
+      ]);
+      return NextResponse.json(
+        { error: "Upload did not reach storage. Please send the file again." },
+        { status: 400 }
+      );
     }
 
     await query(
@@ -46,6 +60,9 @@ export async function POST(
 
     return NextResponse.json({ ok: true });
   } catch (e) {
+    await query(`UPDATE transfers SET status = 'failed' WHERE id = $1`, [
+      params.id,
+    ]).catch(() => undefined);
     return handleError(e);
   }
 }

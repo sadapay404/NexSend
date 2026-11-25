@@ -8,6 +8,7 @@ import {
   CompleteMultipartUploadCommand,
   AbortMultipartUploadCommand,
   ListPartsCommand,
+  HeadObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createWriteStream, createReadStream, existsSync, statSync } from "fs";
@@ -49,6 +50,18 @@ function localRoot(): string {
 
 function localPath(key: string): string {
   return join(localRoot(), key.replace(/\.\./g, ""));
+}
+
+/** True only when the object really exists in whichever backend is active. */
+export async function objectExists(key: string): Promise<boolean> {
+  if (!key) return false;
+  if (!isR2Configured()) return localExists(key);
+  try {
+    await r2().send(new HeadObjectCommand({ Bucket: bucket(), Key: key }));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function makeKey(transferId: string, filename: string): string {
@@ -100,6 +113,15 @@ export async function beginUpload(
     partSize: PART_SIZE,
     totalParts: Math.ceil(size / PART_SIZE),
   };
+}
+
+/** Fresh signed URL for a single-shot upload of `key`. */
+export async function presignSingle(key: string): Promise<string> {
+  return getSignedUrl(
+    r2(),
+    new PutObjectCommand({ Bucket: bucket(), Key: key }),
+    { expiresIn: 3600 }
+  );
 }
 
 export async function signParts(

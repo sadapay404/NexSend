@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { handleError, requireUser } from "@/lib/api";
-import { beginUpload, makeKey } from "@/lib/storage";
+import { beginUpload, isR2Configured, makeKey } from "@/lib/storage";
 import { shouldAutoAccept } from "@/lib/transfers";
 import { z } from "zod";
 
@@ -86,7 +86,10 @@ export async function POST(req: Request) {
     }
 
     const key = makeKey(transferId, fileName as string);
-    await query(`UPDATE transfers SET storage_key = $1 WHERE id = $2`, [key, transferId]);
+    await query(
+      `UPDATE transfers SET storage_key = $1, storage_kind = $2 WHERE id = $3`,
+      [key, isR2Configured() ? "r2" : "local", transferId]
+    );
 
     const plan = await beginUpload(key, fileSize as number, transferId);
 

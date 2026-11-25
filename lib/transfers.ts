@@ -71,7 +71,7 @@ export async function listIncoming(
      FROM transfer_recipients tr
      JOIN transfers t ON t.id = tr.transfer_id
      JOIN users u ON u.id = t.sender_id
-     WHERE tr.recipient_id = $1 AND tr.deleted = FALSE
+     WHERE tr.recipient_id = $1 AND tr.deleted = FALSE AND t.status = 'ready'
      ORDER BY t.created_at DESC
      LIMIT $2`,
     [userId, limit]

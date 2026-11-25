@@ -130,6 +130,8 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
   }
 
   const statusLabel = (() => {
+    if (item.status === "failed") return "Failed";
+    if (item.status === "uploading") return "Uploading";
     if (item.expired) return "Expired";
     if (perspective === "received") {
       switch (status) {
