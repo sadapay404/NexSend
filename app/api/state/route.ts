@@ -47,7 +47,10 @@ export async function GET() {
     if (storage.used < storage.limit) {
       await resolveAlerts("storage-full").catch(() => undefined);
     }
-    const adminAlerts = user.role === "admin" ? await openAlerts() : [];
+    const adminAlerts =
+      user.role === "admin"
+        ? await openAlerts().catch(() => [])
+        : [];
 
     const state: AppState = {
       me: {

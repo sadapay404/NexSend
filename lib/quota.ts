@@ -75,18 +75,28 @@ export async function resolveAlerts(kind: string): Promise<void> {
 }
 
 export async function openAlerts(): Promise<AdminAlert[]> {
-  const rows = await query<{ id: string; kind: string; message: string; created_at: string }>(
-    `SELECT id, kind, message, created_at FROM alerts
-     WHERE resolved_at IS NULL
-     ORDER BY created_at DESC
-     LIMIT 5`
-  );
-  return rows.map((r) => ({
-    id: r.id,
-    kind: r.kind,
-    message: r.message,
-    createdAt: new Date(r.created_at).toISOString(),
-  }));
+  try {
+      const rows = await query<{
+      id: string;
+      kind: string;
+      message: string;
+      created_at: string;
+    }>(
+      `SELECT id, kind, message, created_at FROM alerts
+       WHERE resolved_at IS NULL
+       ORDER BY created_at DESC
+       LIMIT 5`
+    );
+    return rows.map((r) => ({
+      id: r.id,
+      kind: r.kind,
+      message: r.message,
+      createdAt: new Date(r.created_at).toISOString(),
+    }));
+  } catch {
+    // Never let alert bookkeeping take the state endpoint down.
+    return [];
+  }
 }
 
 /**
