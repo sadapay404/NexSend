@@ -340,8 +340,7 @@ export default function SettingsPage() {
         </h2>
         <div className="p-4 space-y-3 text-sm">
           {[
-            ["Created by", "Mubashir"],
-            ["Co-creator", "Sir Sheikh Arsalan"],
+            ["Creator", "Sheikh Arsalan"],
             ["Created for", "Digital Sheikh Nexus"],
             ["Copyright", "© 2026 Digital Sheikh Nexus"],
           ].map(([label, value]) => (
