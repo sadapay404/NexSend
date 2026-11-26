@@ -68,9 +68,22 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
 
   const isText = item.type === "text" || item.type === "clipboard";
   const live = !item.expired;
-  const needsAction = perspective === "received" && status === "pending" && live;
+  const needsAction =
+    perspective === "received" && status === "pending" && live;
+  // A decline destroys the payload, so the card keeps only a marker.
+  const declinedByMe = perspective === "received" && status === "declined";
+  const declinedByAll =
+    perspective === "sent" &&
+    item.recipients.length > 0 &&
+    item.recipients.every((r) => r.status === "declined");
+  const gone = declinedByMe || declinedByAll;
+  const typeLabel =
+    item.type === "clipboard"
+      ? "Clipboard"
+      : item.type.charAt(0).toUpperCase() + item.type.slice(1);
   // Accept is the download: no separate link while the card is still a choice.
-  const canDownload = !isText && live && !needsAction;
+  const canDownload =
+    !isText && live && !needsAction && !gone && item.fileSize !== null;
   const downloadWasStarted =
     started || downloadStarted.has(item.id) || status === "downloaded";
 
@@ -79,7 +92,8 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
     if (perspective !== "received" || isText || !live) return;
     if (status !== "accepted") return;
     if (autoTried.has(item.id)) return;
-    const fresh = Date.now() - new Date(item.createdAt).getTime() < 5 * 60 * 1000;
+    const fresh =
+      Date.now() - new Date(item.createdAt).getTime() < 5 * 60 * 1000;
     if (!fresh) return;
     autoTried.add(item.id);
     downloadStarted.add(item.id);
@@ -156,18 +170,70 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
       }
     }
     if (item.recipients.length === 0) return "No recipient";
-    if (item.recipients.every((r) => r.status === "downloaded")) return "Delivered";
+    if (item.recipients.every((r) => r.status === "downloaded"))
+      return "Delivered";
     if (item.recipients.some((r) => r.status === "downloaded")) return "Partly";
     if (item.recipients.some((r) => r.status === "accepted")) return "Accepted";
-    if (item.recipients.every((r) => r.status === "declined")) return "Declined";
+    if (item.recipients.every((r) => r.status === "declined"))
+      return "Declined";
     return "Waiting";
   })();
+
+  const textChip = (
+    <div
+      onClick={copyText}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          copyText();
+        }
+      }}
+      title={item.text ?? ""}
+      className={cn(
+        "group w-full rounded-xl border bg-black/40 px-3 py-2 cursor-pointer transition-all duration-200",
+        copied
+          ? "border-nexus-green/60 shadow-[0_0_0_3px_rgba(0,166,81,0.12)]"
+          : "border-nexus-border hover:border-white/25",
+      )}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span
+          className={cn(
+            "text-[9px] font-semibold uppercase tracking-wider transition-colors",
+            copied ? "text-nexus-green" : "text-white/25",
+          )}
+        >
+          {copied ? "Copied" : "Text Box"}
+        </span>
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 text-[10px] font-medium transition-colors",
+            copied
+              ? "text-nexus-green"
+              : "text-white/40 group-hover:text-white",
+          )}
+        >
+          {copied ? (
+            <Check className="w-3 h-3" />
+          ) : (
+            <ClipboardCopy className="w-3 h-3" />
+          )}
+          {copied ? "" : "Copy"}
+        </span>
+      </div>
+      <p className="mt-0.5 truncate text-sm leading-tight text-white/85">
+        {item.text}
+      </p>
+    </div>
+  );
 
   return (
     <div
       className={cn(
         "lift rounded-2xl border bg-nexus-card p-4 animate-fade-up",
-        needsAction ? "border-nexus-green/60" : "border-nexus-border"
+        needsAction ? "border-nexus-green/60" : "border-nexus-border",
       )}
     >
       <div className="flex gap-3">
@@ -200,7 +266,7 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
                   ? item.type === "clipboard"
                     ? "Clipboard"
                     : "Text"
-                  : item.fileName ?? "File"}
+                  : (item.fileName ?? "File")}
               </p>
               <p className="text-[11px] text-white/40 mt-0.5 truncate">
                 {perspective === "sent" ? "To " : "From "}
@@ -219,15 +285,15 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
                 item.expired
                   ? "bg-white/5 text-white/40"
                   : needsAction
-                  ? "bg-nexus-green/15 text-nexus-green"
-                  : "bg-white/5 text-white/60"
+                    ? "bg-nexus-green/15 text-nexus-green"
+                    : "bg-white/5 text-white/60",
               )}
             >
               {statusLabel}
             </span>
           </div>
 
-          {isText === false && item.type === "image" && live && (
+          {isText === false && item.type === "image" && live && !gone && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={`/api/transfers/${item.id}/download?inline=1`}
@@ -237,7 +303,7 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
             />
           )}
 
-          {item.type === "video" && live && (
+          {item.type === "video" && live && !gone && (
             <video
               src={`/api/transfers/${item.id}/download?inline=1`}
               controls
@@ -246,9 +312,21 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
             />
           )}
 
+          {needsAction && isText && !gone && (
+            <div className="mt-3">{textChip}</div>
+          )}
+
+          {gone && (
+            <div className="mt-3">
+              <span className="inline-flex items-center gap-2 rounded-xl border border-dashed border-nexus-border px-3 py-2 text-xs text-white/40">
+                <X className="w-3.5 h-3.5" />
+                {typeLabel} Request Declined
+              </span>
+            </div>
+          )}
+
           {/* actions */}
           <div className="mt-3 flex items-center gap-2 flex-wrap">
-
             {needsAction && (
               <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex">
                 <button
@@ -274,54 +352,8 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
               </div>
             )}
 
-            {isText && (
-              <div
-                onClick={copyText}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    copyText();
-                  }
-                }}
-                title={item.text ?? ""}
-                className={cn(
-                  "group flex-1 min-w-0 rounded-xl border bg-black/40 px-3 py-2 cursor-pointer transition-all duration-200",
-                  copied
-                    ? "border-nexus-green/60 shadow-[0_0_0_3px_rgba(0,166,81,0.12)]"
-                    : "border-nexus-border hover:border-white/25"
-                )}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span
-                    className={cn(
-                      "text-[9px] font-semibold uppercase tracking-wider transition-colors",
-                      copied ? "text-nexus-green" : "text-white/25"
-                    )}
-                  >
-                    {copied ? "Copied" : "Text Box"}
-                  </span>
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1 text-[10px] font-medium transition-colors",
-                      copied
-                        ? "text-nexus-green"
-                        : "text-white/40 group-hover:text-white"
-                    )}
-                  >
-                    {copied ? (
-                      <Check className="w-3 h-3" />
-                    ) : (
-                      <ClipboardCopy className="w-3 h-3" />
-                    )}
-                    {copied ? "" : "Copy"}
-                  </span>
-                </div>
-                <p className="mt-0.5 truncate text-sm leading-tight text-white/85">
-                  {item.text}
-                </p>
-              </div>
+            {isText && !gone && !needsAction && (
+              <div className="flex-1 min-w-0">{textChip}</div>
             )}
             {canDownload && (
               <a
@@ -371,7 +403,7 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
                 "text-[11px] px-2 py-0.5 rounded-md",
                 r.status === "downloaded"
                   ? "bg-nexus-green/15 text-nexus-green"
-                  : "bg-white/5 text-white/50"
+                  : "bg-white/5 text-white/50",
               )}
             >
               {r.displayName}

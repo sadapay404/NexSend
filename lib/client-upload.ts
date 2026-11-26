@@ -5,7 +5,12 @@ import type { TransferType } from "./types";
 type Plan =
   | { mode: "local"; uploadUrl: string }
   | { mode: "single"; uploadUrl: string }
-  | { mode: "multipart"; uploadId: string; partSize: number; totalParts: number };
+  | {
+      mode: "multipart";
+      uploadId: string;
+      partSize: number;
+      totalParts: number;
+    };
 
 const RESUME_PREFIX = "nexsend:resume:";
 
@@ -18,7 +23,7 @@ function putWithProgress(
   url: string,
   body: Blob,
   onLoaded: (bytes: number) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -46,7 +51,7 @@ async function putWithRetry(
   body: Blob,
   onLoaded: (bytes: number) => void,
   signal?: AbortSignal,
-  attempts = 3
+  attempts = 3,
 ): Promise<void> {
   let last: unknown;
   for (let i = 0; i < attempts; i++) {
@@ -99,13 +104,19 @@ export async function sendFile(params: {
   let plan: Plan | null = null;
 
   // 1. Try to resume an interrupted upload of the same file.
-  const saved = typeof localStorage !== "undefined" ? localStorage.getItem(key) : null;
+  const saved =
+    typeof localStorage !== "undefined" ? localStorage.getItem(key) : null;
   if (saved) {
     try {
-      const res = await fetch(`/api/transfers/${saved}/parts`, { cache: "no-store" });
+      const res = await fetch(`/api/transfers/${saved}/parts`, {
+        cache: "no-store",
+      });
       if (res.ok) {
         const info = await res.json();
-        if (Number(info.file?.size) === total && info.file?.name === file.name) {
+        if (
+          Number(info.file?.size) === total &&
+          info.file?.name === file.name
+        ) {
           transferId = saved;
           if (info.mode === "multipart" && info.uploadId) {
             plan = {
@@ -157,7 +168,7 @@ export async function sendFile(params: {
   // 3. Upload bytes.
   if (plan.mode === "multipart") {
     const uploadedSet = new Set<number>(
-      ((plan as any).uploaded ?? []).map((p: any) => Number(p.partNumber))
+      ((plan as any).uploaded ?? []).map((p: any) => Number(p.partNumber)),
     );
     const partSize = plan.partSize;
     const loadedByPart = new Map<number, number>();
@@ -174,10 +185,12 @@ export async function sendFile(params: {
     report();
 
     const missing: number[] = [];
-    for (let n = 1; n <= plan.totalParts; n++) if (!uploadedSet.has(n)) missing.push(n);
+    for (let n = 1; n <= plan.totalParts; n++)
+      if (!uploadedSet.has(n)) missing.push(n);
 
     const batches: number[][] = [];
-    for (let i = 0; i < missing.length; i += 20) batches.push(missing.slice(i, i + 20));
+    for (let i = 0; i < missing.length; i += 20)
+      batches.push(missing.slice(i, i + 20));
 
     for (const batch of batches) {
       const signed = await json(
@@ -185,7 +198,7 @@ export async function sendFile(params: {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ partNumbers: batch }),
-        })
+        }),
       );
 
       const tasks = (signed.parts as { partNumber: number; url: string }[]).map(
@@ -200,16 +213,18 @@ export async function sendFile(params: {
               loadedByPart.set(p.partNumber, loaded);
               report();
             },
-            signal
+            signal,
           );
           loadedByPart.set(p.partNumber, blob.size);
           report();
-        }
+        },
       );
 
-      // three at a time keeps mobile browsers happy
-      for (let i = 0; i < tasks.length; i += 3) {
-        await Promise.all(tasks.slice(i, i + 3).map((t) => t()));
+      // Five parts in flight: R2 accepts them in parallel, so a fast line is
+      // filled instead of dribbling one 32 MB piece at a time.
+      const PART_CONCURRENCY = 5;
+      for (let i = 0; i < tasks.length; i += PART_CONCURRENCY) {
+        await Promise.all(tasks.slice(i, i + PART_CONCURRENCY).map((t) => t()));
       }
     }
   } else {
@@ -217,7 +232,7 @@ export async function sendFile(params: {
       plan.uploadUrl,
       file,
       (loaded) => onProgress?.(total ? loaded / total : 1),
-      signal
+      signal,
     );
   }
 
@@ -227,7 +242,7 @@ export async function sendFile(params: {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: "{}",
-    })
+    }),
   );
 
   localStorage.removeItem(key);
@@ -236,5 +251,6 @@ export async function sendFile(params: {
 }
 
 export function clearResume(file: File) {
-  if (typeof localStorage !== "undefined") localStorage.removeItem(resumeKeyFor(file));
+  if (typeof localStorage !== "undefined")
+    localStorage.removeItem(resumeKeyFor(file));
 }

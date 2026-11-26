@@ -171,7 +171,8 @@ export default function SendPage() {
     // Three files in flight at once: more throughput, and one slow upload
     // never blocks the rest of the batch.
     const queue = [...staged];
-    const CONCURRENCY = 3;
+    // Four files in flight: enough to saturate a link without choking a phone.
+    const CONCURRENCY = 4;
 
     const worker = async () => {
       for (;;) {
