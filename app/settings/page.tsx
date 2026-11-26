@@ -342,7 +342,7 @@ export default function SettingsPage() {
           {[
             ["Creator", "Sheikh Arsalan"],
             ["Created for", "Digital Sheikh Nexus"],
-            ["Copyright", "© 2026 Digital Sheikh Nexus"],
+            ["Copyright", "© 2026 The Nexus Academy"],
           ].map(([label, value]) => (
             <div key={label} className="flex items-baseline justify-between gap-4">
               <span className="text-xs text-white/35">{label}</span>
