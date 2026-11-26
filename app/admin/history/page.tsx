@@ -4,19 +4,20 @@ import { useEffect, useState } from "react";
 import { Loader2, Search, ShieldCheck, X } from "lucide-react";
 import { formatBytes, formatTime, cn } from "@/lib/utils";
 import AdminTabs from "@/components/AdminTabs";
+import AdminPreview, { type AdminRow } from "@/components/AdminPreview";
 
-type Row = {
-  id: string;
-  type: string;
-  file_name: string | null;
-  file_size: string | null;
-  text_content: string | null;
+type Row = AdminRow & {
   status: string;
   created_at: string;
   expires_at: string;
   deleted_by_sender: boolean;
   sender_name: string;
-  recipients: { id: string; displayName: string; status: string; deleted: boolean }[];
+  recipients: {
+    id: string;
+    displayName: string;
+    status: string;
+    deleted: boolean;
+  }[];
 };
 
 const KINDS = [
@@ -40,6 +41,7 @@ export default function AdminHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState<Kind>("all");
+  const [preview, setPreview] = useState<Row | null>(null);
 
   const visible = rows.filter((r) => {
     if (!matchesKind(r.type, kind)) return false;
@@ -106,7 +108,7 @@ export default function AdminHistoryPage() {
                 "shrink-0 text-xs px-3 py-1.5 rounded-full border transition-all",
                 kind === k.key
                   ? "bg-nexus-green/15 border-nexus-green/50 text-nexus-green font-semibold"
-                  : "bg-nexus-card border-nexus-border text-white/50 hover:text-white hover:border-white/25"
+                  : "bg-nexus-card border-nexus-border text-white/50 hover:text-white hover:border-white/25",
               )}
             >
               {k.label}
@@ -121,7 +123,9 @@ export default function AdminHistoryPage() {
         </div>
       ) : visible.length === 0 ? (
         <div className="rounded-2xl border border-nexus-border bg-nexus-card p-10 text-center text-sm text-white/45">
-          {rows.length === 0 ? "No transfers yet" : "Nothing matches that filter"}
+          {rows.length === 0
+            ? "No transfers yet"
+            : "Nothing matches that filter"}
         </div>
       ) : (
         <div className="rounded-2xl border border-nexus-border bg-nexus-card overflow-hidden divide-y divide-nexus-border">
@@ -131,15 +135,25 @@ export default function AdminHistoryPage() {
               <div key={r.id} className="p-3.5">
                 <div className="flex items-start gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">
-                      {r.file_name ??
-                        (r.text_content ? r.text_content.slice(0, 70) : r.type)}
-                    </p>
+                    <button
+                      onClick={() => setPreview(r)}
+                      className="group block max-w-full text-left"
+                      title="Open preview"
+                    >
+                      <p className="truncate text-sm font-medium decoration-nexus-green/60 underline-offset-4 transition-colors group-hover:text-nexus-green group-hover:underline">
+                        {r.file_name ??
+                          (r.text_content
+                            ? r.text_content.slice(0, 70)
+                            : r.type)}
+                      </p>
+                    </button>
                     <p className="text-[11px] text-white/35 mt-0.5">
                       {r.sender_name} →{" "}
-                      {r.recipients.map((x) => x.displayName).join(", ") || "—"} ·{" "}
-                      {formatTime(r.created_at)}
-                      {r.file_size ? ` · ${formatBytes(Number(r.file_size))}` : ""}
+                      {r.recipients.map((x) => x.displayName).join(", ") || "—"}{" "}
+                      · {formatTime(r.created_at)}
+                      {r.file_size
+                        ? ` · ${formatBytes(Number(r.file_size))}`
+                        : ""}
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-1">
@@ -148,13 +162,15 @@ export default function AdminHistoryPage() {
                         "text-[11px] px-2 py-0.5 rounded-md",
                         expired
                           ? "bg-white/5 text-white/35"
-                          : "bg-nexus-green/10 text-nexus-green"
+                          : "bg-nexus-green/10 text-nexus-green",
                       )}
                     >
                       {expired ? "Expired" : "Live"}
                     </span>
                     {r.deleted_by_sender && (
-                      <span className="text-[10px] text-white/30">removed by sender</span>
+                      <span className="text-[10px] text-white/30">
+                        removed by sender
+                      </span>
                     )}
                   </div>
                 </div>
@@ -162,6 +178,10 @@ export default function AdminHistoryPage() {
             );
           })}
         </div>
+      )}
+
+      {preview && (
+        <AdminPreview row={preview} onClose={() => setPreview(null)} />
       )}
     </div>
   );

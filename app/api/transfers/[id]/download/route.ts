@@ -35,13 +35,16 @@ function problem(title: string, detail: string, status: number) {
 </div></body></html>`;
   return new NextResponse(html, {
     status,
-    headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "no-store",
+    },
   });
 }
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const user = await requireUser();
@@ -53,33 +56,38 @@ export async function GET(
        LEFT JOIN transfer_recipients tr
          ON tr.transfer_id = t.id AND tr.recipient_id = $2
        WHERE t.id = $1`,
-      [params.id, user.userId]
+      [params.id, user.userId],
     );
 
     if (!t) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     const isSender = t.sender_id === user.userId;
     const isRecipient = Boolean(t.my_status);
-    if (!isSender && !isRecipient) {
+    // The admin console previews any transfer; nobody else gets past this.
+    const isAdmin = user.role === "admin";
+    if (!isSender && !isRecipient && !isAdmin) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     if (t.type === "text" || t.type === "clipboard" || !t.storage_key) {
-      return NextResponse.json({ error: "Nothing to download" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Nothing to download" },
+        { status: 400 },
+      );
     }
 
     if (t.status === "failed") {
       return problem(
         "This upload didn't finish",
         "The file never reached storage, so there is nothing to download. Ask the sender to send it again.",
-        410
+        410,
       );
     }
     if (t.status === "uploading") {
       return problem(
         "Still uploading",
         "The sender's upload has not finished yet. Try again in a moment.",
-        409
+        409,
       );
     }
 
@@ -87,7 +95,7 @@ export async function GET(
       return problem(
         "Download window closed",
         "Files stay available for three hours after they are sent. This one has expired — ask the sender to send it again.",
-        410
+        410,
       );
     }
 
@@ -104,7 +112,7 @@ export async function GET(
         await query(
           `UPDATE transfer_recipients SET status = 'downloaded', updated_at = NOW()
            WHERE transfer_id = $1 AND recipient_id = $2`,
-          [params.id, user.userId]
+          [params.id, user.userId],
         );
       }
     };
@@ -114,16 +122,20 @@ export async function GET(
         return problem(
           "This file isn't in storage",
           "It was sent before cloud storage was switched on, or the upload was interrupted. Ask the sender to send it again.",
-          410
+          410,
         );
       }
       const url = await getDownloadUrl(
         t.storage_key,
         t.file_name ?? "file",
-        inline
+        inline,
       );
       if (!url) {
-        return problem("Storage unavailable", "Please try again in a moment.", 503);
+        return problem(
+          "Storage unavailable",
+          "Please try again in a moment.",
+          503,
+        );
       }
       await markDownloaded();
       return new NextResponse(null, {
@@ -136,12 +148,14 @@ export async function GET(
       return problem(
         "This file isn't in storage",
         "It was sent before cloud storage was switched on, or the upload was interrupted. Ask the sender to send it again.",
-        410
+        410,
       );
     }
 
     await markDownloaded();
-    const stream = Readable.toWeb(openLocalStream(t.storage_key)) as ReadableStream;
+    const stream = Readable.toWeb(
+      openLocalStream(t.storage_key),
+    ) as ReadableStream;
     return new NextResponse(stream, {
       headers: {
         "Content-Type": t.mime_type ?? "application/octet-stream",

@@ -229,6 +229,24 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
     </div>
   );
 
+  const tail = (
+    <>
+      <div className="ml-auto flex items-center gap-1">
+        <span className="text-[11px] mr-1">
+          {live ? <Countdown expiresAt={item.expiresAt} /> : null}
+        </span>
+        <button
+          onClick={remove}
+          disabled={busy}
+          aria-label="Remove from list"
+          className="p-2 rounded-lg text-white/35 hover:text-red-400 hover:bg-white/5 active:scale-90 transition-all"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <div
       className={cn(
@@ -317,77 +335,69 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
           )}
 
           {gone && (
-            <div className="mt-3">
-              <span className="inline-flex items-center gap-2 rounded-xl border border-dashed border-nexus-border px-3 py-2 text-xs text-white/40">
-                <X className="w-3.5 h-3.5" />
-                {typeLabel} Request Declined
+            <div className="mt-3 flex items-center gap-2">
+              <span className="inline-flex min-w-0 items-center gap-2 rounded-xl border border-dashed border-nexus-border px-3 py-2 text-xs text-white/40">
+                <X className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{typeLabel} Request Declined</span>
               </span>
+              <div className="ml-auto flex items-center gap-1 shrink-0">
+                {tail}
+              </div>
             </div>
           )}
 
-          {/* actions */}
-          <div className="mt-3 flex items-center gap-2 flex-wrap">
-            {needsAction && (
-              <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex">
-                <button
-                  onClick={() => act("accepted")}
-                  disabled={busy}
-                  className="inline-flex items-center justify-center gap-1.5 bg-nexus-green text-black text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-[#009648] active:scale-95 transition-all disabled:opacity-50"
-                >
-                  {busy ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Check className="w-4 h-4" />
-                  )}
-                  Accept
-                </button>
-                <button
-                  onClick={() => act("declined")}
-                  disabled={busy}
-                  className="inline-flex items-center justify-center gap-1.5 border border-nexus-border text-sm px-4 py-2.5 rounded-xl hover:border-white/30 active:scale-95 transition-all"
-                >
-                  <X className="w-4 h-4" />
-                  Decline
-                </button>
-              </div>
-            )}
+          {!gone && (
+            <div className="mt-3 flex items-center gap-2 flex-wrap">
+              {needsAction && (
+                <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex">
+                  <button
+                    onClick={() => act("accepted")}
+                    disabled={busy}
+                    className="inline-flex items-center justify-center gap-1.5 bg-nexus-green text-black text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-[#009648] active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    {busy ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Check className="w-4 h-4" />
+                    )}
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => act("declined")}
+                    disabled={busy}
+                    className="inline-flex items-center justify-center gap-1.5 border border-nexus-border text-sm px-4 py-2.5 rounded-xl hover:border-white/30 active:scale-95 transition-all"
+                  >
+                    <X className="w-4 h-4" />
+                    Decline
+                  </button>
+                </div>
+              )}
 
-            {isText && !gone && !needsAction && (
-              <div className="flex-1 min-w-0">{textChip}</div>
-            )}
-            {canDownload && (
-              <a
-                href={`/api/transfers/${item.id}/download`}
-                onClick={() => {
-                  downloadStarted.add(item.id);
-                  setStarted(true);
-                  setTimeout(() => onChanged?.(), 800);
-                }}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-white/10 text-sm px-4 py-2.5 rounded-xl hover:bg-white/15 active:scale-95 transition-all"
-              >
-                <Download className="w-4 h-4" />
-                {downloadWasStarted
-                  ? "Download Again"
-                  : item.fileSize
-                    ? `Download · ${formatBytes(item.fileSize)}`
-                    : "Download"}
-              </a>
-            )}
+              {isText && !gone && !needsAction && (
+                <div className="flex-1 min-w-0">{textChip}</div>
+              )}
+              {canDownload && (
+                <a
+                  href={`/api/transfers/${item.id}/download`}
+                  onClick={() => {
+                    downloadStarted.add(item.id);
+                    setStarted(true);
+                    setTimeout(() => onChanged?.(), 800);
+                  }}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-white/10 text-sm px-4 py-2.5 rounded-xl hover:bg-white/15 active:scale-95 transition-all"
+                >
+                  <Download className="w-4 h-4" />
+                  {downloadWasStarted
+                    ? "Download Again"
+                    : item.fileSize
+                      ? `Download · ${formatBytes(item.fileSize)}`
+                      : "Download"}
+                </a>
+              )}
 
-            <div className="ml-auto flex items-center gap-1">
-              <span className="text-[11px] mr-1">
-                {live ? <Countdown expiresAt={item.expiresAt} /> : null}
-              </span>
-              <button
-                onClick={remove}
-                disabled={busy}
-                aria-label="Remove from list"
-                className="p-2 rounded-lg text-white/35 hover:text-red-400 hover:bg-white/5 active:scale-90 transition-all"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              {tail}
             </div>
-          </div>
+          )}
 
           {error && <p className="text-[11px] text-red-400 mt-2">{error}</p>}
         </div>

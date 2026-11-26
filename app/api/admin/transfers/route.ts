@@ -9,12 +9,14 @@ export async function GET(req: Request) {
     await requireAdmin();
     const limit = Math.min(
       Number(new URL(req.url).searchParams.get("limit") ?? 200),
-      500
+      500,
     );
 
     const rows = await query(
       `SELECT t.id, t.type, t.file_name, t.file_size, t.text_content, t.status,
-              t.created_at, t.expires_at, t.deleted_by_sender,
+              t.mime_type, t.created_at, t.expires_at, t.deleted_by_sender,
+              (t.storage_key IS NOT NULL AND t.status = 'ready'
+                AND t.expires_at > NOW()) AS available,
               s.display_name AS sender_name,
               COALESCE(
                 (SELECT json_agg(json_build_object(
@@ -32,7 +34,7 @@ export async function GET(req: Request) {
        JOIN users s ON s.id = t.sender_id
        ORDER BY t.created_at DESC
        LIMIT $1`,
-      [limit]
+      [limit],
     );
 
     return NextResponse.json({ transfers: rows });
