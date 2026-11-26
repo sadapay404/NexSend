@@ -340,8 +340,8 @@ export default function SettingsPage() {
         </h2>
         <div className="p-4 space-y-3 text-sm">
           {[
-            ["Created by", "Sheikh Arsalan"],
-            ["Created for", "Digital Sheikh Nexus"],
+            ["Created By", "Sheikh Arsalan"],
+            ["Created For", "Digital Sheikh Nexus"],
             ["Copyright", "© 2026 The Nexus Academy"],
           ].map(([label, value]) => (
             <div key={label} className="flex items-baseline justify-between gap-4">
