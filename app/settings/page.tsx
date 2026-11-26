@@ -82,16 +82,8 @@ export default function SettingsPage() {
         <h2 className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/40 border-b border-nexus-border">
           Storage
         </h2>
-        <div className="p-4 space-y-3">
+        <div className="p-4">
           <StoragePill storage={state?.storage} />
-          <p className="text-xs text-white/40 leading-relaxed">
-            Files live for three hours, then the bytes are released. Uploads stop
-            automatically 9 GB in, so the free storage allowance is never
-            exceeded.{" "}
-            {me?.role === "admin"
-              ? "Clear expired files from the banner on top whenever it appears."
-              : "Ask the admin if you see a storage-full error."}
-          </p>
         </div>
       </section>
 

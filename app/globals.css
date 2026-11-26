@@ -225,3 +225,23 @@ body {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* Storage meter sheen */
+@keyframes sheen {
+  0% {
+    transform: translateX(-120%);
+  }
+  60%,
+  100% {
+    transform: translateX(320%);
+  }
+}
+.animate-sheen {
+  animation: sheen 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-sheen {
+    animation: none;
+  }
+}

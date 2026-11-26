@@ -1,7 +1,43 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { cn, formatBytes } from "@/lib/utils";
 import type { StorageInfo } from "@/lib/types";
+
+/** Smoothly counts to a new value instead of jumping. Honours reduced motion. */
+function useTween(value: number, ms = 900) {
+  const [display, setDisplay] = useState(0);
+  const shown = useRef(0);
+
+  useEffect(() => {
+    const reduced =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      shown.current = value;
+      setDisplay(value);
+      return;
+    }
+
+    const from = shown.current;
+    const t0 = performance.now();
+    let raf = 0;
+
+    const step = (t: number) => {
+      const p = Math.min(1, (t - t0) / ms);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const next = from + (value - from) * eased;
+      shown.current = next;
+      setDisplay(next);
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [value, ms]);
+
+  return display;
+}
 
 export default function StoragePill({
   storage,
@@ -14,60 +50,52 @@ export default function StoragePill({
   const limit = storage?.limit ?? 9 * 1024 * 1024 * 1024;
   const percent = Math.min(100, storage?.percent ?? 0);
 
-  const tone =
-    percent >= 95
-      ? "from-[#ff7a7a] to-[#e03131]"
-      : percent >= 80
-        ? "from-[#ffd166] to-[#e8a317]"
-        : "from-[#00c862] to-[#00A651]";
-
-  const label = percent >= 95 ? "Full" : percent >= 80 ? "Filling up" : "Healthy";
+  const animated = useTween(used);
+  const [amount, unit] = formatBytes(animated).split(" ");
 
   return (
-    <div className={cn("w-full", className)}>
-      <div className="flex items-baseline justify-between mb-2">
-        <span className="text-xs text-white/70 tabular-nums">
-          <span className="text-sm font-semibold text-white">
-            {formatBytes(used)}
-          </span>{" "}
+    <div className={cn("w-full animate-fade-up", className)}>
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="flex items-baseline gap-1.5 tabular-nums">
+          <span className="text-3xl font-semibold tracking-tight leading-none">
+            {amount}
+          </span>
+          <span className="text-sm font-medium text-white/45">{unit}</span>
+        </p>
+        <p className="text-xs text-white/30 tabular-nums">
           of {formatBytes(limit)}
-        </span>
-        <span
-          className={cn(
-            "text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border",
-            percent >= 95
-              ? "text-[#ff7a7a] border-[#ff7a7a]/40 bg-[#ff7a7a]/10"
-              : percent >= 80
-                ? "text-[#ffd166] border-[#ffd166]/40 bg-[#ffd166]/10"
-                : "text-nexus-green border-nexus-green/40 bg-nexus-green/10"
-          )}
-        >
-          {label}
-        </span>
+        </p>
       </div>
 
-      {/* Track + proportional fill, both outlined so the pill shape always reads. */}
       <div
-        className="relative h-4 w-full rounded-full border border-white/15 bg-black/60 p-[3px] shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)] overflow-hidden"
+        className="relative mt-4 h-2.5 w-full rounded-full bg-white/[0.06] overflow-hidden ring-1 ring-inset ring-white/[0.06]"
         role="progressbar"
         aria-valuenow={Math.round(percent)}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-label="Storage used"
-        title={`${formatBytes(used)} of ${formatBytes(limit)} used`}
       >
         <div
           className={cn(
-            "h-full rounded-full bg-gradient-to-r transition-[width] duration-700 ease-out",
-            "shadow-[0_0_10px_-2px_rgba(0,166,81,0.55)]",
-            tone
+            "relative h-full rounded-full transition-[width,background] duration-700 ease-out",
+            "bg-gradient-to-r shadow-[0_0_14px_rgba(0,166,81,0.45)]",
+            percent >= 95
+              ? "from-[#ff6b6b] to-[#e03131] shadow-[0_0_14px_rgba(224,49,49,0.5)]"
+              : percent >= 80
+                ? "from-[#f7c948] to-[#00a651] shadow-[0_0_14px_rgba(247,201,72,0.35)]"
+                : "from-[#007a3d] via-[#00A651] to-[#22e07e]"
           )}
-          style={{ width: `${percent > 0 ? Math.max(percent, 2) : 0}%` }}
-        />
-        {/* centre reading, sits above the fill */}
-        <span className="absolute inset-0 grid place-items-center text-[9px] font-semibold tracking-wide text-white/70 tabular-nums">
-          {percent.toFixed(0)}%
-        </span>
+          style={{ width: `${percent > 0 ? Math.max(percent, 1.5) : 0}%` }}
+        >
+          {/* travelling sheen */}
+          <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full">
+            <span className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/35 to-transparent animate-sheen" />
+          </span>
+          {/* bright head at the fill edge */}
+          {percent > 1 && (
+            <span className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 h-2.5 w-2.5 rounded-full bg-white/90 blur-[2px]" />
+          )}
+        </div>
       </div>
     </div>
   );
