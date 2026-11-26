@@ -249,7 +249,7 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
               >
                 <span
                   className={cn(
-                    "absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-medium backdrop-blur transition-colors",
+                    "absolute right-2 top-2 inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-medium backdrop-blur transition-colors",
                     copied
                       ? "border-nexus-green/40 bg-nexus-green/15 text-nexus-green"
                       : "border-nexus-border bg-nexus-card/90 text-white/60 group-hover:text-white"
