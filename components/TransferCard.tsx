@@ -27,6 +27,9 @@ type Props = {
 };
 
 const autoTried = new Set<string>();
+/** Downloads fire once; download managers take over from there, so we can only
+ *  report "started" and offer the link again. */
+const downloadStarted = new Set<string>();
 
 /** Fire the browser download without a second tap. Browsers may still ask. */
 function triggerDownload(id: string) {
@@ -56,7 +59,7 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
-  const [started, setStarted] = useState(false);
+  const [started, setStarted] = useState(() => downloadStarted.has(item.id));
   const [status, setStatus] = useState(item.myStatus);
 
   useEffect(() => {
@@ -65,8 +68,11 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
 
   const isText = item.type === "text" || item.type === "clipboard";
   const live = !item.expired;
-  const canDownload = !isText && live;
   const needsAction = perspective === "received" && status === "pending" && live;
+  // Accept is the download: no separate link while the card is still a choice.
+  const canDownload = !isText && live && !needsAction;
+  const downloadWasStarted =
+    started || downloadStarted.has(item.id) || status === "downloaded";
 
   // Auto-accepted transfers start downloading on their own, once per session.
   useEffect(() => {
@@ -76,6 +82,7 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
     const fresh = Date.now() - new Date(item.createdAt).getTime() < 5 * 60 * 1000;
     if (!fresh) return;
     autoTried.add(item.id);
+    downloadStarted.add(item.id);
     setStarted(true);
     triggerDownload(item.id);
   }, [item.id, status, item.createdAt, isText, live, perspective]);
@@ -86,6 +93,7 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
     setBusy(true);
     setError("");
     if (next === "accepted" && !isText) {
+      downloadStarted.add(item.id);
       setStarted(true);
       triggerDownload(item.id);
     }
@@ -221,16 +229,46 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
 
           {isText && (
             <div className="mt-3">
-              <p className="text-sm text-white/80 whitespace-pre-wrap break-words line-clamp-6">
-                {item.text}
-              </p>
-              <button
+              <div
                 onClick={copyText}
-                className="mt-2 inline-flex items-center gap-1.5 text-xs text-nexus-green hover:underline active:scale-95 transition-transform"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    copyText();
+                  }
+                }}
+                title="Copy to clipboard"
+                className={cn(
+                  "group relative rounded-xl border bg-black/40 transition-all duration-200 cursor-pointer",
+                  copied
+                    ? "border-nexus-green/60 shadow-[0_0_0_3px_rgba(0,166,81,0.12)]"
+                    : "border-nexus-border hover:border-white/25"
+                )}
               >
-                {copied ? <Check className="w-3.5 h-3.5" /> : <ClipboardCopy className="w-3.5 h-3.5" />}
-                {copied ? "Copied" : "Copy"}
-              </button>
+                <span
+                  className={cn(
+                    "absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-medium backdrop-blur transition-colors",
+                    copied
+                      ? "border-nexus-green/40 bg-nexus-green/15 text-nexus-green"
+                      : "border-nexus-border bg-nexus-card/90 text-white/60 group-hover:text-white"
+                  )}
+                >
+                  {copied ? (
+                    <Check className="w-3.5 h-3.5" />
+                  ) : (
+                    <ClipboardCopy className="w-3.5 h-3.5" />
+                  )}
+                  {copied ? "Copied" : "Copy"}
+                </span>
+                <pre className="max-h-56 overflow-auto whitespace-pre-wrap break-words px-3 pb-3 pt-11 font-sans text-sm leading-relaxed text-white/85 select-text">
+                  {item.text}
+                </pre>
+              </div>
+              <p className="mt-1.5 text-[11px] text-white/25">
+                Tap the box to copy everything
+              </p>
             </div>
           )}
 
@@ -284,17 +322,18 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
               <a
                 href={`/api/transfers/${item.id}/download`}
                 onClick={() => {
+                  downloadStarted.add(item.id);
                   setStarted(true);
                   setTimeout(() => onChanged?.(), 800);
                 }}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-white/10 text-sm px-4 py-2.5 rounded-xl hover:bg-white/15 active:scale-95 transition-all"
               >
-                {started ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Download className="w-4 h-4" />
-                )}
-                {started ? "Downloading" : item.fileSize ? formatBytes(item.fileSize) : "Download"}
+                <Download className="w-4 h-4" />
+                {downloadWasStarted
+                  ? "Download Again"
+                  : item.fileSize
+                    ? `Download · ${formatBytes(item.fileSize)}`
+                    : "Download"}
               </a>
             )}
 

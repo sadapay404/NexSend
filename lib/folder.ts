@@ -74,13 +74,20 @@ export async function zipFiles(
   const root = files[0]?.path.split("/")[0];
   const stripRoot = root && files.every((f) => f.path.startsWith(`${root}/`));
 
+  // STORE = the archive is a pure container: image and video bytes are copied
+  // verbatim, never re-encoded. Quality is identical to the originals.
   files.forEach(({ file, path }) => {
     const name = stripRoot ? path.slice(root!.length + 1) : path;
-    zip.file(name, file);
+    zip.file(name, file, { binary: true });
   });
 
   const blob = await zip.generateAsync(
-    { type: "blob", compression: "STORE", streamFiles: true },
+    {
+      type: "blob",
+      compression: "STORE",
+      streamFiles: true,
+      platform: "DOS",
+    },
     (meta) => onProgress?.(meta.percent / 100)
   );
 
