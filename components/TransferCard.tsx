@@ -247,28 +247,22 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
                     : "border-nexus-border hover:border-white/25"
                 )}
               >
-                <span
-                  className={cn(
-                    "absolute right-2 top-2 inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-medium backdrop-blur transition-colors",
-                    copied
-                      ? "border-nexus-green/40 bg-nexus-green/15 text-nexus-green"
-                      : "border-nexus-border bg-nexus-card/90 text-white/60 group-hover:text-white"
-                  )}
-                >
-                  {copied ? (
-                    <Check className="w-3.5 h-3.5" />
-                  ) : (
-                    <ClipboardCopy className="w-3.5 h-3.5" />
-                  )}
-                  {copied ? "Copied" : "Copy"}
-                </span>
-                <pre className="max-h-56 overflow-auto whitespace-pre-wrap break-words px-3 pb-3 pt-11 font-sans text-sm leading-relaxed text-white/85 select-text">
+                <div className="flex justify-end px-3 pt-2">
+                  <span
+                    className={cn(
+                      "text-[10px] uppercase tracking-wider transition-colors",
+                      copied
+                        ? "text-nexus-green"
+                        : "text-white/25 group-hover:text-white/40"
+                    )}
+                  >
+                    {copied ? "Copied" : "Text Box"}
+                  </span>
+                </div>
+                <pre className="max-h-56 overflow-auto whitespace-pre-wrap break-words px-3.5 pb-3.5 pt-1.5 font-sans text-sm leading-relaxed text-white/85 select-text">
                   {item.text}
                 </pre>
               </div>
-              <p className="mt-1.5 text-[11px] text-white/25">
-                Tap the box to copy everything
-              </p>
             </div>
           )}
 
@@ -337,18 +331,19 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
               </a>
             )}
 
-            <span className="text-[11px] ml-auto">
-              {live ? <Countdown expiresAt={item.expiresAt} /> : null}
-            </span>
-
-            <button
-              onClick={remove}
-              disabled={busy}
-              aria-label="Remove from list"
-              className="p-2 rounded-lg text-white/35 hover:text-red-400 hover:bg-white/5 active:scale-90 transition-all"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <div className="ml-auto flex items-center gap-1">
+              <span className="text-[11px] mr-1">
+                {live ? <Countdown expiresAt={item.expiresAt} /> : null}
+              </span>
+              <button
+                onClick={remove}
+                disabled={busy}
+                aria-label="Remove from list"
+                className="p-2 rounded-lg text-white/35 hover:text-red-400 hover:bg-white/5 active:scale-90 transition-all"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {error && <p className="text-[11px] text-red-400 mt-2">{error}</p>}
