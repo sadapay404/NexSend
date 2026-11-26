@@ -52,10 +52,27 @@ export type Me = {
   avatarUpdatedAt: string | null;
 };
 
+export type StorageInfo = {
+  used: number;
+  limit: number;
+  warn: number;
+  free: number;
+  percent: number;
+};
+
+export type AdminAlert = {
+  id: string;
+  kind: string;
+  message: string;
+  createdAt: string;
+};
+
 export type AppState = {
   me: Me;
   people: Person[];
   incoming: TransferItem[];
   sent: TransferItem[];
   pendingCount: number;
+  storage: StorageInfo;
+  adminAlerts: AdminAlert[];
 };

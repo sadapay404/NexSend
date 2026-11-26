@@ -57,6 +57,7 @@ yours. Photos are self-managed by design — you cannot set or clear someone els
 ## Storage and retention
 
 - Files are stored for **3 hours** after sending, then deleted.
+- Uploads stop automatically at **9 GB** so the 10 GB free storage allowance is never exceeded. If the banner says storage is full, press **Clear expired** and ask senders to retry.
 - History rows stay until someone removes them; you always see them in **Activity**.
 - Each transfer can be up to **2 GB**. Folders are zipped in the sender's browser.
 - Free tiers used: Neon Postgres (database) and Cloudflare R2 (file storage, 10 GB).

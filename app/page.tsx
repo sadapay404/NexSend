@@ -16,6 +16,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import PersonPicker from "@/components/PersonPicker";
+import StoragePill from "@/components/StoragePill";
 import { useApp } from "@/components/AppStateProvider";
 import { createTextTransfer, sendFile } from "@/lib/client-upload";
 import {
@@ -229,6 +230,9 @@ export default function SendPage() {
               ? `${onlineCount} of ${people.length} online`
               : `${people.length} people · nobody online`}
           </p>
+        </div>
+        <div className="w-36 sm:w-48 shrink-0 pb-0.5">
+          <StoragePill storage={state?.storage} compact />
         </div>
       </div>
 

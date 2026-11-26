@@ -56,6 +56,16 @@ CREATE TABLE IF NOT EXISTS settings (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS alerts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  kind TEXT NOT NULL,
+  message TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  resolved_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_alerts_open ON alerts(resolved_at);
+
 CREATE INDEX IF NOT EXISTS idx_transfers_sender ON transfers(sender_id);
 CREATE INDEX IF NOT EXISTS idx_recipients_recipient ON transfer_recipients(recipient_id);
 CREATE INDEX IF NOT EXISTS idx_recipients_transfer ON transfer_recipients(transfer_id);

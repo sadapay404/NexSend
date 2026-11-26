@@ -28,7 +28,7 @@ export default function Sidebar({ user }: Props) {
   }
 
   return (
-    <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-nexus-border bg-nexus-dark">
+    <aside className="hidden md:flex fixed inset-y-0 left-0 z-30 w-60 flex-col border-r border-nexus-border bg-nexus-dark">
       <div className="p-5 border-b border-nexus-border">
         <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -44,7 +44,7 @@ export default function Sidebar({ user }: Props) {
         </div>
       </div>
 
-      <nav className="flex-1 p-3 space-y-1">
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
         {items.map((item) => {
           const active =
             item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Check, Loader2, Star, Moon, Languages, Camera } from "lucide-react";
 import { useApp } from "@/components/AppStateProvider";
 import Avatar from "@/components/Avatar";
+import StoragePill from "@/components/StoragePill";
 import { fileToAvatarDataUrl } from "@/lib/image";
 import { cn } from "@/lib/utils";
 
@@ -75,6 +76,24 @@ export default function SettingsPage() {
       <div className="hidden md:block">
         <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
       </div>
+
+      {/* Storage */}
+      <section className="lift rounded-2xl border border-nexus-border bg-nexus-card overflow-hidden">
+        <h2 className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/40 border-b border-nexus-border">
+          Storage
+        </h2>
+        <div className="p-4 space-y-3">
+          <StoragePill storage={state?.storage} />
+          <p className="text-xs text-white/40 leading-relaxed">
+            Files live for three hours, then the bytes are released. Uploads stop
+            automatically 9 GB in, so the free storage allowance is never
+            exceeded.{" "}
+            {me?.role === "admin"
+              ? "Clear expired files from the banner on top whenever it appears."
+              : "Ask the admin if you see a storage-full error."}
+          </p>
+        </div>
+      </section>
 
       {/* Profile */}
       <section className="lift rounded-2xl border border-nexus-border bg-nexus-card overflow-hidden">

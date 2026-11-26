@@ -9,6 +9,7 @@ import {
   listSent,
 } from "@/lib/transfers";
 import { shouldSweep, sweepExpired } from "@/lib/cleanup";
+import { openAlerts, resolveAlerts, storageUsage } from "@/lib/quota";
 import type { AppState } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -40,6 +41,13 @@ export async function GET() {
     ]);
 
     const people = await listPeople(user.userId, favIds);
+    const storage = await storageUsage();
+
+    // A full-storage alarm clears itself as soon as there is room again.
+    if (storage.used < storage.limit) {
+      await resolveAlerts("storage-full").catch(() => undefined);
+    }
+    const adminAlerts = user.role === "admin" ? await openAlerts() : [];
 
     const state: AppState = {
       me: {
@@ -57,6 +65,8 @@ export async function GET() {
       sent,
       pendingCount: incoming.filter((t) => t.myStatus === "pending" && !t.expired)
         .length,
+      storage,
+      adminAlerts,
     };
 
     return NextResponse.json(state, {

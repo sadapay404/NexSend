@@ -3,6 +3,7 @@ import { query, queryOne } from "@/lib/db";
 import { handleError, requireUser } from "@/lib/api";
 import { beginUpload, isR2Configured, makeKey } from "@/lib/storage";
 import { shouldAutoAccept } from "@/lib/transfers";
+import { checkRoom, formatSize } from "@/lib/quota";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -50,6 +51,24 @@ export async function POST(req: Request) {
     }
     if (!isTextLike && fileSize! > 2 * 1024 * 1024 * 1024) {
       return NextResponse.json({ error: "File is over the 2 GB limit" }, { status: 413 });
+    }
+
+    // Hard stop before Cloudflare's 10 GB free tier could ever be billed.
+    if (!isTextLike) {
+      const room = await checkRoom(fileSize as number);
+      if (!room.ok) {
+        return NextResponse.json(
+          {
+            error: `Storage is full — ${formatSize(room.usage.used)} of ${formatSize(
+              room.usage.limit
+            )} in use. Files free up as they expire; ask the admin to clear space.`,
+            code: "storage_full",
+            used: room.usage.used,
+            limit: room.usage.limit,
+          },
+          { status: 507 }
+        );
+      }
     }
 
     const transfer = await queryOne<{ id: string }>(

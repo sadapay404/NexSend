@@ -6,6 +6,7 @@ import Topbar from "@/components/Topbar";
 import BottomNav from "@/components/BottomNav";
 import PageTransition from "@/components/PageTransition";
 import { AppStateProvider } from "@/components/AppStateProvider";
+import AlertBanner from "@/components/AlertBanner";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
@@ -51,9 +52,10 @@ export default async function RootLayout({
         <AppStateProvider>
           <div className="flex min-h-screen">
             <Sidebar user={user} />
-            <div className="flex-1 flex flex-col min-w-0">
+            <div className="flex-1 flex flex-col min-w-0 md:pl-60">
               <Topbar user={user} />
               <main className="flex-1 px-4 pt-4 pb-28 md:px-8 md:py-8 md:pb-8 w-full max-w-5xl mx-auto">
+                <AlertBanner />
                 <PageTransition>{children}</PageTransition>
               </main>
             </div>

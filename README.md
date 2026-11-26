@@ -11,6 +11,7 @@ Think LocalSend, but over the internet: both sides see progress live, and nothin
 - **Multi-recipient** — pick one person or several.
 - **Live progress** on both sides, with in-app notifications.
 - **Accept or decline.** Auto-accept can be turned on for favorites or for everyone in Settings.
+- **Storage guard**: uploads are refused past 9 GB total, so the free cloud tier is never billed.
 - **History** keeps every transfer. Files can be re-downloaded for 3 hours, then the bytes are deleted and the row stays as `Expired`.
 - **Profile pictures** users upload and manage themselves — the admin cannot change them.
 - **Admin** manages usernames, display names and passwords; users can only change their own display name and photo.
