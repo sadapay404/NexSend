@@ -39,7 +39,17 @@ export function getPool(): Pool {
     globalForDb.pgPool = new Pool({
       connectionString: url,
       ssl: url.includes("neon.tech") ? { rejectUnauthorized: false } : undefined,
-      max: 10,
+      // Many uploads can land at once; queue politely instead of dying.
+      max: 12,
+      idleTimeoutMillis: 20_000,
+      connectionTimeoutMillis: 10_000,
+      statement_timeout: 15_000,
+      query_timeout: 15_000,
+      keepAlive: true,
+    });
+    // A dropped idle connection must never surface as a crashed request.
+    globalForDb.pgPool.on("error", (err) => {
+      console.error("[db] idle client error:", err.message);
     });
   }
   return globalForDb.pgPool;

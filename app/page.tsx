@@ -169,44 +169,65 @@ export default function SendPage() {
     setNotice(null);
     let failed = 0;
 
-    for (const item of staged) {
-      setStaged((prev) =>
-        prev.map((s) =>
-          s.id === item.id ? { ...s, status: "uploading", progress: 0, error: undefined } : s
-        )
-      );
-      try {
-        await sendFile({
-          file: item.file,
-          type: item.type,
-          recipientIds: selected,
-          onProgress: (fraction) =>
-            setStaged((prev) =>
-              prev.map((s) => (s.id === item.id ? { ...s, progress: fraction } : s))
-            ),
-        });
-        setStaged((prev) =>
-          prev.map((s) =>
-            s.id === item.id ? { ...s, status: "done", progress: 1 } : s
-          )
-        );
-      } catch (e) {
-        failed += 1;
+    // Three files in flight at once: more throughput, and one slow upload
+    // never blocks the rest of the batch.
+    const queue = [...staged];
+    const CONCURRENCY = 3;
+
+    const worker = async () => {
+      for (;;) {
+        const item = queue.shift();
+        if (!item) return;
+
         setStaged((prev) =>
           prev.map((s) =>
             s.id === item.id
-              ? { ...s, status: "error", error: (e as Error).message }
+              ? { ...s, status: "uploading", progress: 0, error: undefined }
               : s
           )
         );
+
+        try {
+          await sendFile({
+            file: item.file,
+            type: item.type,
+            recipientIds: selected,
+            onProgress: (fraction) =>
+              setStaged((prev) =>
+                prev.map((s) =>
+                  s.id === item.id ? { ...s, progress: fraction } : s
+                )
+              ),
+          });
+          setStaged((prev) =>
+            prev.map((s) =>
+              s.id === item.id ? { ...s, status: "done", progress: 1 } : s
+            )
+          );
+        } catch (e) {
+          failed += 1;
+          setStaged((prev) =>
+            prev.map((s) =>
+              s.id === item.id
+                ? { ...s, status: "error", error: (e as Error).message }
+                : s
+            )
+          );
+        }
       }
-    }
+    };
+
+    await Promise.all(
+      Array.from({ length: Math.min(CONCURRENCY, staged.length) }, worker)
+    );
 
     setSending(false);
     await refresh();
     if (failed === 0) {
       setNotice({ kind: "ok", text: "Sent" });
       setTimeout(() => setStaged([]), 900);
+    } else if (failed === staged.length) {
+      setNotice({ kind: "err", text: "Upload failed" });
     } else {
       setNotice({ kind: "err", text: "Some files did not upload" });
     }

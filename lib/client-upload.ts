@@ -35,6 +35,35 @@ function putWithProgress(
   });
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * One retry wrapper for every byte that leaves the browser: a dropped Wi-Fi
+ * moment or a 5xx from the bucket should not end the transfer.
+ */
+async function putWithRetry(
+  url: string,
+  body: Blob,
+  onLoaded: (bytes: number) => void,
+  signal?: AbortSignal,
+  attempts = 3
+): Promise<void> {
+  let last: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await putWithProgress(url, body, onLoaded, signal);
+    } catch (e) {
+      last = e;
+      const message = (e as Error).message ?? "";
+      if (signal?.aborted) throw e;
+      // Expired/forbidden URL needs a fresh signature, not another attempt.
+      if (/\b403\b|\b404\b|signature|expired/i.test(message)) throw e;
+      if (i < attempts - 1) await sleep(400 * 2 ** i);
+    }
+  }
+  throw last;
+}
+
 async function json(res: Response) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error ?? "Request failed");
@@ -164,7 +193,7 @@ export async function sendFile(params: {
           const start = (p.partNumber - 1) * partSize;
           const blob = file.slice(start, Math.min(start + partSize, total));
           loadedByPart.set(p.partNumber, 0);
-          await putWithProgress(
+          await putWithRetry(
             p.url,
             blob,
             (loaded) => {
@@ -184,7 +213,7 @@ export async function sendFile(params: {
       }
     }
   } else {
-    await putWithProgress(
+    await putWithRetry(
       plan.uploadUrl,
       file,
       (loaded) => onProgress?.(total ? loaded / total : 1),

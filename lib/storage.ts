@@ -20,6 +20,30 @@ import { pipeline } from "stream/promises";
 const PART_SIZE = 32 * 1024 * 1024; // 32 MB
 const MULTIPART_THRESHOLD = 64 * 1024 * 1024; // 64 MB
 
+/** Retries a transient cloud/network failure instead of failing the request. */
+export async function withRetry<T>(
+  op: () => Promise<T>,
+  attempts = 3,
+  baseDelayMs = 250
+): Promise<T> {
+  let last: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await op();
+    } catch (e) {
+      last = e;
+      const err = e as { $metadata?: { httpStatusCode?: number }; name?: string };
+      const status = err?.$metadata?.httpStatusCode ?? 0;
+      // 4xx (except throttling) will not fix itself.
+      if (status >= 400 && status < 500 && status !== 429) throw e;
+      if (i < attempts - 1) {
+        await new Promise((r) => setTimeout(r, baseDelayMs * 2 ** i));
+      }
+    }
+  }
+  throw last;
+}
+
 export function isR2Configured(): boolean {
   return Boolean(
     process.env.R2_ACCOUNT_ID &&
@@ -57,7 +81,9 @@ export async function objectExists(key: string): Promise<boolean> {
   if (!key) return false;
   if (!isR2Configured()) return localExists(key);
   try {
-    await r2().send(new HeadObjectCommand({ Bucket: bucket(), Key: key }));
+    await withRetry(() =>
+      r2().send(new HeadObjectCommand({ Bucket: bucket(), Key: key })), 2, 150
+    );
     return true;
   } catch {
     return false;
@@ -176,7 +202,8 @@ export async function completeMultipart(
   uploadId: string,
   parts: { partNumber: number; etag: string }[]
 ): Promise<void> {
-  await r2().send(
+  await withRetry(() =>
+    r2().send(
     new CompleteMultipartUploadCommand({
       Bucket: bucket(),
       Key: key,
@@ -187,6 +214,7 @@ export async function completeMultipart(
           .map((p) => ({ PartNumber: p.partNumber, ETag: p.etag })),
       },
     })
+    )
   );
 }
 

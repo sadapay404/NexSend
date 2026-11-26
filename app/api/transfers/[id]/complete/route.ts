@@ -18,12 +18,21 @@ export async function POST(
     const user = await requireUser();
     const body = await req.json().catch(() => ({}));
 
-    const t = await queryOne<{ storage_key: string; upload_id: string | null }>(
-      `SELECT storage_key, upload_id FROM transfers
+    const t = await queryOne<{
+      storage_key: string;
+      upload_id: string | null;
+      status: string;
+    }>(
+      `SELECT storage_key, upload_id, status FROM transfers
        WHERE id = $1 AND sender_id = $2`,
       [params.id, user.userId]
     );
     if (!t) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    // Retries and double taps must be harmless.
+    if (t.status === "ready") {
+      return NextResponse.json({ ok: true, already: true });
+    }
 
     if (t.upload_id && isR2Configured()) {
       const parts = Array.isArray(body.parts) && body.parts.length
