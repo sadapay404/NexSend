@@ -227,45 +227,6 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
             </span>
           </div>
 
-          {isText && (
-            <div className="mt-3">
-              <div
-                onClick={copyText}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    copyText();
-                  }
-                }}
-                title="Copy to clipboard"
-                className={cn(
-                  "group relative rounded-xl border bg-black/40 transition-all duration-200 cursor-pointer",
-                  copied
-                    ? "border-nexus-green/60 shadow-[0_0_0_3px_rgba(0,166,81,0.12)]"
-                    : "border-nexus-border hover:border-white/25"
-                )}
-              >
-                <div className="flex justify-end px-3 pt-2">
-                  <span
-                    className={cn(
-                      "text-[10px] uppercase tracking-wider transition-colors",
-                      copied
-                        ? "text-nexus-green"
-                        : "text-white/25 group-hover:text-white/40"
-                    )}
-                  >
-                    {copied ? "Copied" : "Text Box"}
-                  </span>
-                </div>
-                <pre className="max-h-56 overflow-auto whitespace-pre-wrap break-words px-3.5 pb-3.5 pt-1.5 font-sans text-sm leading-relaxed text-white/85 select-text">
-                  {item.text}
-                </pre>
-              </div>
-            </div>
-          )}
-
           {isText === false && item.type === "image" && live && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -287,6 +248,7 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
 
           {/* actions */}
           <div className="mt-3 flex items-center gap-2 flex-wrap">
+
             {needsAction && (
               <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex">
                 <button
@@ -312,6 +274,55 @@ export default function TransferCard({ item, perspective, onChanged }: Props) {
               </div>
             )}
 
+            {isText && (
+              <div
+                onClick={copyText}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    copyText();
+                  }
+                }}
+                title={item.text ?? ""}
+                className={cn(
+                  "group flex-1 min-w-0 rounded-xl border bg-black/40 px-3 py-2 cursor-pointer transition-all duration-200",
+                  copied
+                    ? "border-nexus-green/60 shadow-[0_0_0_3px_rgba(0,166,81,0.12)]"
+                    : "border-nexus-border hover:border-white/25"
+                )}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span
+                    className={cn(
+                      "text-[9px] font-semibold uppercase tracking-wider transition-colors",
+                      copied ? "text-nexus-green" : "text-white/25"
+                    )}
+                  >
+                    {copied ? "Copied" : "Text Box"}
+                  </span>
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1 text-[10px] font-medium transition-colors",
+                      copied
+                        ? "text-nexus-green"
+                        : "text-white/40 group-hover:text-white"
+                    )}
+                  >
+                    {copied ? (
+                      <Check className="w-3 h-3" />
+                    ) : (
+                      <ClipboardCopy className="w-3 h-3" />
+                    )}
+                    {copied ? "" : "Copy"}
+                  </span>
+                </div>
+                <p className="mt-0.5 truncate text-sm leading-tight text-white/85">
+                  {item.text}
+                </p>
+              </div>
+            )}
             {canDownload && (
               <a
                 href={`/api/transfers/${item.id}/download`}
