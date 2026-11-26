@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, Search, ShieldCheck, X } from "lucide-react";
 import { formatBytes, formatTime, cn } from "@/lib/utils";
 import AdminTabs from "@/components/AdminTabs";
 
@@ -19,9 +19,43 @@ type Row = {
   recipients: { id: string; displayName: string; status: string; deleted: boolean }[];
 };
 
+const KINDS = [
+  { key: "all", label: "All" },
+  { key: "text", label: "Text" },
+  { key: "image", label: "Images" },
+  { key: "video", label: "Videos" },
+  { key: "file", label: "Files" },
+] as const;
+
+type Kind = (typeof KINDS)[number]["key"];
+
+function matchesKind(type: string, kind: Kind): boolean {
+  if (kind === "all") return true;
+  if (kind === "text") return type === "text" || type === "clipboard";
+  return type === kind || (kind === "file" && type === "folder");
+}
+
 export default function AdminHistoryPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
+  const [kind, setKind] = useState<Kind>("all");
+
+  const visible = rows.filter((r) => {
+    if (!matchesKind(r.type, kind)) return false;
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    return [
+      r.file_name ?? "",
+      r.text_content ?? "",
+      r.sender_name,
+      r.type,
+      ...r.recipients.map((x) => x.displayName),
+    ]
+      .join(" ")
+      .toLowerCase()
+      .includes(q);
+  });
 
   useEffect(() => {
     fetch("/api/admin/transfers", { cache: "no-store" })
@@ -43,17 +77,55 @@ export default function AdminHistoryPage() {
         </p>
       </div>
 
+      <div className="space-y-2">
+        <div className="relative">
+          <Search className="w-4 h-4 text-white/30 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search files, messages, people"
+            className="w-full bg-nexus-card border border-nexus-border rounded-xl pl-9 pr-9 py-2.5 text-sm outline-none focus:border-nexus-green"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery("")}
+              aria-label="Clear search"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
+          {KINDS.map((k) => (
+            <button
+              key={k.key}
+              onClick={() => setKind(k.key)}
+              className={cn(
+                "shrink-0 text-xs px-3 py-1.5 rounded-full border transition-all",
+                kind === k.key
+                  ? "bg-nexus-green/15 border-nexus-green/50 text-nexus-green font-semibold"
+                  : "bg-nexus-card border-nexus-border text-white/50 hover:text-white hover:border-white/25"
+              )}
+            >
+              {k.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {loading ? (
         <div className="flex items-center gap-2 text-sm text-white/50">
           <Loader2 className="w-4 h-4 animate-spin" /> Loading
         </div>
-      ) : rows.length === 0 ? (
+      ) : visible.length === 0 ? (
         <div className="rounded-2xl border border-nexus-border bg-nexus-card p-10 text-center text-sm text-white/45">
-          No transfers yet
+          {rows.length === 0 ? "No transfers yet" : "Nothing matches that filter"}
         </div>
       ) : (
         <div className="rounded-2xl border border-nexus-border bg-nexus-card overflow-hidden divide-y divide-nexus-border">
-          {rows.map((r) => {
+          {visible.map((r) => {
             const expired = new Date(r.expires_at).getTime() < Date.now();
             return (
               <div key={r.id} className="p-3.5">
