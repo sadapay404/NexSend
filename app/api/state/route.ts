@@ -10,7 +10,6 @@ import {
 } from "@/lib/transfers";
 import { shouldSweep, sweepExpired } from "@/lib/cleanup";
 import { openAlerts, resolveAlerts, storageUsage } from "@/lib/quota";
-import { touchDevice } from "@/lib/devices";
 import type { AppState } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -25,8 +24,6 @@ export async function GET() {
        WHERE id = $1 AND (last_seen IS NULL OR last_seen < NOW() - INTERVAL '30 seconds')`,
       [user.userId]
     );
-
-    await touchDevice(user.deviceId);
 
     if (shouldSweep()) {
       await sweepExpired(3).catch(() => undefined);

@@ -5,7 +5,6 @@ import { Check, Loader2, Star, Moon, Languages, Camera } from "lucide-react";
 import { useApp } from "@/components/AppStateProvider";
 import Avatar from "@/components/Avatar";
 import StoragePill from "@/components/StoragePill";
-import DevicesCard from "@/components/DevicesCard";
 import { fileToAvatarDataUrl } from "@/lib/image";
 import { cn } from "@/lib/utils";
 
@@ -328,8 +327,6 @@ export default function SettingsPage() {
           </p>
         )}
       </section>
-
-      <DevicesCard />
 
       {/* Appearance / language */}
       <section className="lift rounded-2xl border border-nexus-border bg-nexus-card overflow-hidden">

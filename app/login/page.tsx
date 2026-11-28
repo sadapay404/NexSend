@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-import { deviceKey } from "@/lib/device-client";
 
 export default function LoginPage() {
   const params = useSearchParams();
@@ -24,7 +23,6 @@ export default function LoginPage() {
         body: JSON.stringify({
           username,
           password,
-          deviceKey: deviceKey() || undefined,
         }),
       });
       const data = await res.json();

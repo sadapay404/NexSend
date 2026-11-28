@@ -60,20 +60,6 @@ CREATE TABLE IF NOT EXISTS settings (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS devices (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  fingerprint TEXT NOT NULL,
-  label TEXT NOT NULL,
-  browser TEXT,
-  os TEXT,
-  kind TEXT,
-  user_agent TEXT,
-  first_seen TIMESTAMPTZ DEFAULT NOW(),
-  last_seen TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE (user_id, fingerprint)
-);
-
 CREATE TABLE IF NOT EXISTS alerts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   kind TEXT NOT NULL,
@@ -89,7 +75,6 @@ CREATE INDEX IF NOT EXISTS idx_recipients_recipient ON transfer_recipients(recip
 CREATE INDEX IF NOT EXISTS idx_recipients_transfer ON transfer_recipients(transfer_id);
 CREATE INDEX IF NOT EXISTS idx_transfers_expires ON transfers(expires_at);
 CREATE INDEX IF NOT EXISTS idx_users_last_seen ON users(last_seen);
-CREATE INDEX IF NOT EXISTS idx_devices_user ON devices(user_id, last_seen DESC);
 
 -- Profile pictures (stored with the account, nobody else can change them)
 ALTER TABLE transfers ADD COLUMN IF NOT EXISTS storage_kind TEXT;
@@ -98,9 +83,6 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar BYTEA;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_mime TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_updated_at TIMESTAMPTZ;
 
--- Device history: hardware name, network, and remote sign-out
-ALTER TABLE devices ADD COLUMN IF NOT EXISTS model TEXT;
-ALTER TABLE devices ADD COLUMN IF NOT EXISTS ip TEXT;
-ALTER TABLE devices ADD COLUMN IF NOT EXISTS meta JSONB;
-ALTER TABLE devices ADD COLUMN IF NOT EXISTS signed_out_at TIMESTAMPTZ;
+-- Devices list was removed; clear the leftover table on the next boot.
+DROP TABLE IF EXISTS devices;
 `;

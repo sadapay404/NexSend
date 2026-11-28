@@ -3,12 +3,10 @@ import { query, queryOne } from "@/lib/db";
 import { createSession, setSessionCookie, verifyPassword } from "@/lib/auth";
 import { handleError } from "@/lib/api";
 import { z } from "zod";
-import { clientIp, recordDevice } from "@/lib/devices";
 
 const schema = z.object({
   username: z.string().min(1),
   password: z.string().min(1),
-  deviceKey: z.string().max(64).optional(),
 });
 
 const attempts = new Map<string, { count: number; until: number }>();
@@ -60,20 +58,11 @@ export async function POST(req: Request) {
 
     attempts.delete(key);
 
-    // Never let device bookkeeping stand between someone and their account.
-    const device = await recordDevice(
-      user.id,
-      req.headers.get("user-agent"),
-      clientIp(req),
-      parsed.data.deviceKey
-    ).catch(() => null);
-
     const token = await createSession({
       userId: user.id,
       username: user.username,
       displayName: user.display_name,
       role: user.role,
-      deviceId: device?.id,
     });
     setSessionCookie(token);
 

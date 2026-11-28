@@ -11,7 +11,6 @@ import {
 import { ArrowDownLeft, ArrowUpRight, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import type { AppState, Me, Person } from "@/lib/types";
-import { identifyDevice } from "@/lib/device-client";
 
 type Toast = { id: string; text: string; kind: "in" | "out" };
 
@@ -45,12 +44,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const seenIncoming = useRef<Set<string>>(new Set());
   const deliveredSeen = useRef<Set<string>>(new Set());
   const firstLoad = useRef(true);
-
-  // Read the hardware name once per session (Client Hints, see lib/device-client).
-  useEffect(() => {
-    if (onLoginPage) return;
-    identifyDevice();
-  }, [onLoginPage]);
 
   const push = useCallback((text: string, kind: "in" | "out") => {
     const id = crypto.randomUUID();
