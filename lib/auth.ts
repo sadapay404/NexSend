@@ -12,6 +12,8 @@ export type SessionPayload = {
   username: string;
   displayName: string;
   role: "admin" | "user";
+  /** Which device row this cookie belongs to. */
+  deviceId?: string;
 };
 
 const getSecret = getSecretKey;

@@ -3,6 +3,7 @@ import { query, queryOne } from "@/lib/db";
 import { createSession, setSessionCookie, verifyPassword } from "@/lib/auth";
 import { handleError } from "@/lib/api";
 import { z } from "zod";
+import { recordDevice } from "@/lib/devices";
 
 const schema = z.object({
   username: z.string().min(1),
@@ -58,11 +59,14 @@ export async function POST(req: Request) {
 
     attempts.delete(key);
 
+    const device = await recordDevice(user.id, req.headers.get("user-agent"));
+
     const token = await createSession({
       userId: user.id,
       username: user.username,
       displayName: user.display_name,
       role: user.role,
+      deviceId: device.id,
     });
     setSessionCookie(token);
 

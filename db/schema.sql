@@ -56,6 +56,20 @@ CREATE TABLE IF NOT EXISTS settings (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS devices (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  fingerprint TEXT NOT NULL,
+  label TEXT NOT NULL,
+  browser TEXT,
+  os TEXT,
+  kind TEXT,
+  user_agent TEXT,
+  first_seen TIMESTAMPTZ DEFAULT NOW(),
+  last_seen TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (user_id, fingerprint)
+);
+
 CREATE TABLE IF NOT EXISTS alerts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   kind TEXT NOT NULL,
@@ -78,3 +92,5 @@ ALTER TABLE transfers ALTER COLUMN expires_at SET DEFAULT (NOW() + INTERVAL '3 h
 ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar BYTEA;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_mime TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_updated_at TIMESTAMPTZ;
+
+CREATE INDEX IF NOT EXISTS idx_devices_user ON devices(user_id, last_seen DESC);

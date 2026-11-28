@@ -5,6 +5,7 @@ import { Check, Loader2, Star, Moon, Languages, Camera } from "lucide-react";
 import { useApp } from "@/components/AppStateProvider";
 import Avatar from "@/components/Avatar";
 import StoragePill from "@/components/StoragePill";
+import DevicesCard from "@/components/DevicesCard";
 import { fileToAvatarDataUrl } from "@/lib/image";
 import { cn } from "@/lib/utils";
 
@@ -46,7 +47,7 @@ export default function SettingsPage() {
         body: JSON.stringify({ displayName }),
       });
       const data = await res.json();
-      setNameMsg(res.ok ? "Saved" : data.error ?? "Could not save");
+      setNameMsg(res.ok ? "Saved" : (data.error ?? "Could not save"));
       if (res.ok) {
         patchMe({ displayName });
         await refresh();
@@ -171,7 +172,9 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-xs text-white/50 mb-1.5">Display name</label>
+            <label className="block text-xs text-white/50 mb-1.5">
+              Display name
+            </label>
             <input
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
@@ -184,7 +187,9 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-xs text-white/50 mb-1.5">Username</label>
+            <label className="block text-xs text-white/50 mb-1.5">
+              Username
+            </label>
             <input
               value={me.username}
               readOnly
@@ -203,7 +208,9 @@ export default function SettingsPage() {
             >
               {savingName ? "Saving" : "Save"}
             </button>
-            {nameMsg && <span className="text-xs text-nexus-green">{nameMsg}</span>}
+            {nameMsg && (
+              <span className="text-xs text-nexus-green">{nameMsg}</span>
+            )}
           </div>
         </form>
       </section>
@@ -237,13 +244,17 @@ export default function SettingsPage() {
               onClick={() => changeMode(option.value)}
               className={cn(
                 "w-full flex items-start gap-3 p-3 rounded-xl text-left transition-colors",
-                mode === option.value ? "bg-nexus-green/10" : "hover:bg-white/5"
+                mode === option.value
+                  ? "bg-nexus-green/10"
+                  : "hover:bg-white/5",
               )}
             >
               <span
                 className={cn(
                   "mt-0.5 w-4 h-4 rounded-full border-2 grid place-items-center shrink-0",
-                  mode === option.value ? "border-nexus-green" : "border-white/25"
+                  mode === option.value
+                    ? "border-nexus-green"
+                    : "border-white/25",
                 )}
               >
                 {mode === option.value && (
@@ -251,7 +262,9 @@ export default function SettingsPage() {
                 )}
               </span>
               <span>
-                <span className="block text-sm font-medium">{option.title}</span>
+                <span className="block text-sm font-medium">
+                  {option.title}
+                </span>
                 <span className="block text-[11px] text-white/40 mt-0.5">
                   {option.desc}
                 </span>
@@ -281,7 +294,9 @@ export default function SettingsPage() {
                 updatedAt={person.avatarUpdatedAt}
                 size={28}
               />
-              <span className="text-sm flex-1 truncate">{person.displayName}</span>
+              <span className="text-sm flex-1 truncate">
+                {person.displayName}
+              </span>
               <button
                 onClick={() => {
                   const next = !person.favorite;
@@ -300,7 +315,7 @@ export default function SettingsPage() {
                     "w-4 h-4",
                     person.favorite
                       ? "text-nexus-green fill-nexus-green"
-                      : "text-white/30"
+                      : "text-white/30",
                   )}
                 />
               </button>
@@ -313,6 +328,8 @@ export default function SettingsPage() {
           </p>
         )}
       </section>
+
+      <DevicesCard />
 
       {/* Appearance / language */}
       <section className="lift rounded-2xl border border-nexus-border bg-nexus-card overflow-hidden">
@@ -344,7 +361,10 @@ export default function SettingsPage() {
             ["Created For", "Digital Sheikh Nexus"],
             ["Copyright", "© 2026 The Nexus Academy"],
           ].map(([label, value]) => (
-            <div key={label} className="flex items-baseline justify-between gap-4">
+            <div
+              key={label}
+              className="flex items-baseline justify-between gap-4"
+            >
               <span className="text-xs text-white/35">{label}</span>
               <span className="text-sm text-right">{value}</span>
             </div>

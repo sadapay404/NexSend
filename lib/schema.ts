@@ -60,6 +60,20 @@ CREATE TABLE IF NOT EXISTS settings (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS devices (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  fingerprint TEXT NOT NULL,
+  label TEXT NOT NULL,
+  browser TEXT,
+  os TEXT,
+  kind TEXT,
+  user_agent TEXT,
+  first_seen TIMESTAMPTZ DEFAULT NOW(),
+  last_seen TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (user_id, fingerprint)
+);
+
 CREATE TABLE IF NOT EXISTS alerts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   kind TEXT NOT NULL,
@@ -75,6 +89,7 @@ CREATE INDEX IF NOT EXISTS idx_recipients_recipient ON transfer_recipients(recip
 CREATE INDEX IF NOT EXISTS idx_recipients_transfer ON transfer_recipients(transfer_id);
 CREATE INDEX IF NOT EXISTS idx_transfers_expires ON transfers(expires_at);
 CREATE INDEX IF NOT EXISTS idx_users_last_seen ON users(last_seen);
+CREATE INDEX IF NOT EXISTS idx_devices_user ON devices(user_id, last_seen DESC);
 
 -- Profile pictures (stored with the account, nobody else can change them)
 ALTER TABLE transfers ADD COLUMN IF NOT EXISTS storage_kind TEXT;
