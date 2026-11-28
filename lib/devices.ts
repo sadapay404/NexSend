@@ -89,13 +89,23 @@ export function clientIp(req: Request): string | null {
   return req.headers.get("x-real-ip")?.slice(0, 64) ?? null;
 }
 
+/** A browser-generated device id, prefixed so it cannot collide with UA hashes. */
+function normalizeKey(deviceKey?: string | null) {
+  if (!deviceKey) return null;
+  const clean = deviceKey.trim();
+  if (!/^[A-Za-z0-9-]{8,64}$/.test(clean)) return null;
+  return `dev:${clean}`;
+}
+
 /** Remember this device, or just bump its last-seen stamp. */
 export async function recordDevice(
   userId: string,
   userAgent: string | null | undefined,
   ip?: string | null,
+  deviceKey?: string | null,
 ): Promise<{ id: string } & DeviceInfo> {
   const info = describeDevice(userAgent);
+  const fingerprint = normalizeKey(deviceKey) ?? info.fingerprint;
   const row = await queryOne<{ id: string }>(
     `INSERT INTO devices (user_id, fingerprint, label, browser, os, kind, user_agent, ip)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -111,7 +121,7 @@ export async function recordDevice(
      RETURNING id`,
     [
       userId,
-      info.fingerprint,
+      fingerprint,
       info.label,
       info.browser,
       info.os,
@@ -121,6 +131,20 @@ export async function recordDevice(
     ],
   );
   revCache.delete(row!.id);
+
+  /*
+   * Rows created before device keys existed were keyed on browser + system, so
+   * two Android phones collapsed into one. Now that this browser has a real
+   * key, retire that shared row so the list stops lying about who is signed in.
+   */
+  if (normalizeKey(deviceKey)) {
+    await query(
+      `DELETE FROM devices
+        WHERE user_id = $1 AND fingerprint = $2 AND id <> $3`,
+      [userId, info.fingerprint, row!.id],
+    ).catch(() => undefined);
+  }
+
   return { id: row!.id, ...info };
 }
 
@@ -155,6 +179,25 @@ export async function describeHardware(
       WHERE id = $1`,
     [deviceId, model, JSON.stringify(meta), ip ?? null],
   );
+}
+
+/**
+ * Sessions made before device keys existed can share one row between two
+ * phones. This says whether the row really belongs to the browser asking.
+ */
+export async function deviceKeyMatches(
+  userId: string,
+  deviceId: string | null | undefined,
+  deviceKey?: string | null
+): Promise<boolean> {
+  if (!deviceId) return false;
+  const key = normalizeKey(deviceKey);
+  if (!key) return true; // nothing to compare against
+  const row = await queryOne<{ fingerprint: string }>(
+    `SELECT fingerprint FROM devices WHERE id = $1 AND user_id = $2`,
+    [deviceId, userId]
+  ).catch(() => null);
+  return Boolean(row) && row!.fingerprint === key;
 }
 
 export async function signOutDevice(userId: string, deviceId: string) {

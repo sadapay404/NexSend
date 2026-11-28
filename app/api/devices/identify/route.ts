@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { handleError, requireUser } from "@/lib/api";
-import { clientIp, describeHardware, recordDevice } from "@/lib/devices";
+import { createSession, setSessionCookie } from "@/lib/auth";
+import {
+  clientIp,
+  describeHardware,
+  deviceKeyMatches,
+  recordDevice,
+} from "@/lib/devices";
 
 export const dynamic = "force-dynamic";
 
@@ -9,9 +15,11 @@ export const dynamic = "force-dynamic";
  * Browsers hide the hardware name from the user-agent, but Chrome and Edge on
  * Android will hand it over through User-Agent Client Hints. The client reads
  * those and posts them here, which is how "Chrome on Android" becomes
- * "Pixel 7 · Chrome".
+ * "Pixel 7 · Chrome". It also carries the browser's permanent device key, which
+ * is the only reliable way to tell two identical phones apart.
  */
 const schema = z.object({
+  deviceKey: z.string().max(64).optional(),
   model: z.string().max(80).optional(),
   platform: z.string().max(40).optional(),
   platformVersion: z.string().max(40).optional(),
@@ -33,18 +41,25 @@ export async function POST(req: Request) {
 
     const ip = clientIp(req);
     let deviceId = user.deviceId ?? null;
-    if (!deviceId) {
+
+    // Old cookie, a retired row, or a row shared with another phone: re-bind.
+    if (
+      !(await deviceKeyMatches(user.userId, deviceId, parsed.data.deviceKey))
+    ) {
       const device = await recordDevice(
         user.userId,
         req.headers.get("user-agent"),
         ip,
+        parsed.data.deviceKey,
       );
       deviceId = device.id;
+      const token = await createSession({ ...user, deviceId });
+      setSessionCookie(token);
     }
 
-    await describeHardware(deviceId, parsed.data, ip);
+    await describeHardware(deviceId!, parsed.data, ip);
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, deviceId });
   } catch (e) {
     return handleError(e);
   }

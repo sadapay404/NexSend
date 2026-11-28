@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Loader2, Eye, EyeOff } from "lucide-react";
+import { deviceKey } from "@/lib/device-client";
 
 export default function LoginPage() {
   const params = useSearchParams();
@@ -20,7 +21,11 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({
+          username,
+          password,
+          deviceKey: deviceKey() || undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -92,7 +97,11 @@ export default function LoginPage() {
                 tabIndex={-1}
                 aria-label={show ? "Hide password" : "Show password"}
               >
-                {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {show ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
           </div>

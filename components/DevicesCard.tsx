@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { cn, formatTime } from "@/lib/utils";
+import { deviceKey } from "@/lib/device-client";
 
 type Device = {
   id: string;
@@ -82,7 +83,9 @@ export default function DevicesCard() {
   const [busy, setBusy] = useState(false);
 
   const load = () =>
-    fetch("/api/devices", { cache: "no-store" })
+    fetch(`/api/devices?key=${encodeURIComponent(deviceKey())}`, {
+      cache: "no-store",
+    })
       .then(async (r) => {
         if (!r.ok) throw new Error("Could not load devices");
         return r.json();

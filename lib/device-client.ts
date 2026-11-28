@@ -1,6 +1,25 @@
 "use client";
 
 const FLAG = "nexsend:identified:v1";
+const KEY = "nexsend:device-key:v1";
+
+/**
+ * A random, permanent id for this browser profile. It is the only thing that
+ * can tell two identical Android phones apart — their user-agents and even
+ * their model hints can be equal, so the user-agent cannot be the identity.
+ */
+export function deviceKey(): string {
+  if (typeof window === "undefined") return "";
+  try {
+    const existing = localStorage.getItem(KEY);
+    if (existing) return existing;
+    const created = crypto.randomUUID();
+    localStorage.setItem(KEY, created);
+    return created;
+  } catch {
+    return "";
+  }
+}
 
 /**
  * Browsers refuse to publish the hardware name in the user-agent (Apple never
@@ -32,6 +51,7 @@ export async function identifyDevice() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        deviceKey: deviceKey() || undefined,
         model: model || undefined,
         platform: uad?.platform || undefined,
         platformVersion: platformVersion || undefined,

@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { handleError, requireUser } from "@/lib/api";
-import { clientIp, listDevices, recordDevice } from "@/lib/devices";
+import { createSession, setSessionCookie } from "@/lib/auth";
+import {
+  clientIp,
+  deviceKeyMatches,
+  listDevices,
+  recordDevice,
+} from "@/lib/devices";
 
 export const dynamic = "force-dynamic";
 
