@@ -59,14 +59,18 @@ export async function POST(req: Request) {
 
     attempts.delete(key);
 
-    const device = await recordDevice(user.id, req.headers.get("user-agent"));
+    // Never let device bookkeeping stand between someone and their account.
+    const device = await recordDevice(
+      user.id,
+      req.headers.get("user-agent")
+    ).catch(() => null);
 
     const token = await createSession({
       userId: user.id,
       username: user.username,
       displayName: user.display_name,
       role: user.role,
-      deviceId: device.id,
+      deviceId: device?.id,
     });
     setSessionCookie(token);
 
