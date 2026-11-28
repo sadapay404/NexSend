@@ -1,4 +1,5 @@
 import { getCurrentUser, type SessionPayload } from "./auth";
+import { isDeviceRevoked } from "./devices";
 import { NextResponse } from "next/server";
 
 export class ApiError extends Error {
@@ -12,6 +13,10 @@ export class ApiError extends Error {
 export async function requireUser(): Promise<SessionPayload> {
   const user = await getCurrentUser();
   if (!user) throw new ApiError("Not authenticated", 401);
+  // The session may have been signed out from another device in Settings.
+  if (await isDeviceRevoked(user.deviceId, user.iat)) {
+    throw new ApiError("Signed out on this device", 401);
+  }
   return user;
 }
 

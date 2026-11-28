@@ -3,7 +3,7 @@ import { query, queryOne } from "@/lib/db";
 import { createSession, setSessionCookie, verifyPassword } from "@/lib/auth";
 import { handleError } from "@/lib/api";
 import { z } from "zod";
-import { recordDevice } from "@/lib/devices";
+import { clientIp, recordDevice } from "@/lib/devices";
 
 const schema = z.object({
   username: z.string().min(1),
@@ -62,7 +62,8 @@ export async function POST(req: Request) {
     // Never let device bookkeeping stand between someone and their account.
     const device = await recordDevice(
       user.id,
-      req.headers.get("user-agent")
+      req.headers.get("user-agent"),
+      clientIp(req)
     ).catch(() => null);
 
     const token = await createSession({

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { handleError, requireUser } from "@/lib/api";
-import { listDevices, recordDevice } from "@/lib/devices";
+import { clientIp, listDevices, recordDevice } from "@/lib/devices";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +14,7 @@ export async function GET(req: Request) {
       const device = await recordDevice(
         user.userId,
         req.headers.get("user-agent"),
+        clientIp(req),
       );
       currentId = device.id;
     }

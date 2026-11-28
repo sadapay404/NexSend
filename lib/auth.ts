@@ -14,6 +14,8 @@ export type SessionPayload = {
   role: "admin" | "user";
   /** Which device row this cookie belongs to. */
   deviceId?: string;
+  /** Issued-at, in seconds (set by jose). Used to compare against sign-outs. */
+  iat?: number;
 };
 
 const getSecret = getSecretKey;
